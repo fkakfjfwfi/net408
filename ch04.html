@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 4 章 网络层 · 408 计算机网络可视化课堂</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<nav class="topbar"><div class="topbar-inner">
+  <a class="logo" href="index.html"><span class="dot"></span>408 计算机网络可视化课堂</a>
+  <div class="nav-links">
+    <a href="index.html">总览</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
+  </div>
+  <button class="theme-btn" title="切换明暗主题">🌙</button>
+</div></nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>第 4 章 · 网络层</h1>
+    <p>网络层负责“把分组从源主机送到目的主机”，核心是 IP 地址、子网划分和路由选择。这一章是 408 网络部分分值最高、计算题最多的一章，必须重点拿下。</p>
+    <p class="tagline">预计学习 5~6 小时 · 1 个交互实验室 · 8 题练习 · 打卡 7 项</p>
+  </div>
+
+  <div class="toc"><span class="toc-label">本页导航</span><a href="#goal">学习目标</a><a href="#s1">网络层功能</a><a href="#s2">IPv4 与分片</a><a href="#s3">地址与子网</a><a href="#s4">ARP/DHCP/ICMP</a><a href="#s5">路由协议</a><a href="#s6">IPv6 与 NAT</a><a href="#pit">避坑清单</a><a href="#quiz">章内练习</a><a href="#ck">打卡</a></div>
+
+  <div class="callout exam" id="goal"><div class="co-title">🎯 学习目标（学完你应该能）</div>
+  ① 画出 IPv4 首部，说出各字段作用，独立完成分片计算；<br>
+  ② 根据 IP 和前缀求网络地址、广播地址、可用主机范围；<br>
+  ③ 会做子网划分、CIDR 聚合和最长前缀匹配；<br>
+  ④ 说清 ARP、DHCP、ICMP 的工作过程和使用场景；<br>
+  ⑤ 对比 RIP、OSPF、BGP 的算法、报文和适用范围；<br>
+  ⑥ 说清 NAT 的作用、代价和基本转换过程。</div>
+
+  <h2 class="sec" id="s1">4.1 网络层的三个核心任务</h2>
+  <div class="callout life"><div class="co-title">🗺️ 生活类比</div>
+  网络层像<b>全国物流的干线调度</b>：它不关心包裹里是什么（传输层的事），只关心“从哪个城市发、到哪个城市、走哪条干线、下一站交给谁”。IP 地址就是城市地址，路由表就是调度表。</div>
+  <div class="grid cols-3">
+    <div class="card"><h3>① 异构网络互联</h3><p>把以太网、Wi-Fi、蜂窝网等不同链路连成一个互联网。网络层用统一的 IP 分组屏蔽底层差异。</p></div>
+    <div class="card"><h3>② 路由选择</h3><p>根据拓扑和策略，为分组选择从源到目的的路径。路由协议负责“算路”，路由表负责“查路”。</p></div>
+    <div class="card"><h3>③ 分组转发</h3><p>路由器收到分组后，查表决定从哪个接口发往哪个下一跳。转发是逐跳的，IP 本身不保证可靠。</p></div>
+  </div>
+  <p><b>数据报 vs 虚电路：</b>IP 采用<b>数据报</b>方式，每个分组独立选路、可能乱序；网络层只提供“尽最大努力交付”，可靠性由 TCP 负责。</p>
+
+  <h2 class="sec" id="s2">4.2 IPv4 首部与分片</h2>
+  <h3 class="sub">4.2.1 首部字段（最小 20 B）</h3>
+  <table class="tbl">
+    <tr><th>字段</th><th>长度</th><th>作用 / 考点</th></tr>
+    <tr><td>版本</td><td>4 bit</td><td>IPv4 为 4，IPv6 为 6</td></tr>
+    <tr><td>首部长度</td><td>4 bit</td><td>单位 4 B；最小 5（20 B），最大 15（60 B）</td></tr>
+    <tr><td>总长度</td><td>16 bit</td><td>首部 + 数据，最大 65535 B</td></tr>
+    <tr><td>标识</td><td>16 bit</td><td>同一数据报的所有分片使用相同标识</td></tr>
+    <tr><td>标志</td><td>3 bit</td><td>DF=1 禁止分片；MF=1 表示后面还有分片</td></tr>
+    <tr><td>片偏移</td><td>13 bit</td><td>单位 <b>8 B</b>；指出该片数据在原数据中的位置</td></tr>
+    <tr><td>TTL</td><td>8 bit</td><td>每经过一个路由器减 1，减到 0 丢弃并回 ICMP 超时</td></tr>
+    <tr><td>协议</td><td>8 bit</td><td>TCP=6，UDP=17，ICMP=1，OSPF=89</td></tr>
+    <tr><td>首部校验和</td><td>16 bit</td><td>只校验首部，不校验数据；每跳都要重新计算</td></tr>
+    <tr><td>源/目的 IP</td><td>各 32 bit</td><td>发送方和接收方地址</td></tr>
+  </table>
+
+  <h3 class="sub">4.2.2 分片计算（高频）</h3>
+  <p>以太网 MTU=1500 B，其中 IP 首部 20 B，所以每片最多携带 <b>1480 B</b> 数据。分片时数据长度必须是 <b>8 B 的整数倍</b>，片偏移 = 该片数据起点 ÷ 8。</p>
+  <p><b>例：</b>一个总长 3000 B 的 IP 数据报（首部 20 B，数据 2980 B）经过 MTU=1500 的链路。</p>
+  <pre class="code">每片最大数据 = 1500 − 20 = 1480 B
+2980 = 1480 + 1480 + 20
+
+分片 1：总长 1500，数据 1480，片偏移 0，   MF=1
+分片 2：总长 1500，数据 1480，片偏移 185， MF=1   （1480÷8=185）
+分片 3：总长 40，  数据 20，  片偏移 370， MF=0   （2960÷8=370）
+原始数据报的标识字段被三个分片共用，接收端据此重组。</pre>
+  <div class="callout warn"><div class="co-title">⚠️ 三个易错点</div>
+  ① 片偏移单位是 <b>8 B</b>，不是 1 B；② 总长度字段包含首部；③ DF=1 时路由器不能分片，只能丢弃并返回 ICMP 差错。</div>
+
+  <h2 class="sec" id="s3">4.3 IP 地址、子网划分与 CIDR</h2>
+
+  <h3 class="sub">4.3.1 分类地址与特殊地址</h3>
+  <table class="tbl">
+    <tr><th>类别</th><th>首位</th><th>范围</th><th>默认掩码</th><th>用途</th></tr>
+    <tr><td>A</td><td>0</td><td>1.0.0.0 ~ 126.255.255.255</td><td>255.0.0.0 (/8)</td><td>超大型网络</td></tr>
+    <tr><td>B</td><td>10</td><td>128.0.0.0 ~ 191.255.255.255</td><td>255.255.0.0 (/16)</td><td>中型网络</td></tr>
+    <tr><td>C</td><td>110</td><td>192.0.0.0 ~ 223.255.255.255</td><td>255.255.255.0 (/24)</td><td>小型网络</td></tr>
+    <tr><td>D</td><td>1110</td><td>224.0.0.0 ~ 239.255.255.255</td><td>—</td><td>组播</td></tr>
+    <tr><td>E</td><td>1111</td><td>240.0.0.0 ~ 255.255.255.255</td><td>—</td><td>保留</td></tr>
+  </table>
+  <p><b>私有地址：</b>10.0.0.0/8、172.16.0.0/12（172.16~172.31）、192.168.0.0/16。私有地址不能直接在公网路由，需要 NAT 转换。</p>
+  <p><b>特殊地址：</b>127.0.0.0/8 本机回环；0.0.0.0 表示“本网络/任意地址”；255.255.255.255 受限广播；主机号全 0 是网络地址，全 1 是广播地址。</p>
+
+  <h3 class="sub">4.3.2 子网划分：借主机位</h3>
+  <p>把一个大网络划分成多个子网，就是<b>从主机位借若干位当子网号</b>。借 k 位 → 2<sup>k</sup> 个子网；每个子网可用主机数 = 2<sup>剩余主机位</sup>−2。</p>
+  <p><b>例：</b>192.168.1.0/24 借 2 位 → /26，得到 4 个子网：</p>
+  <table class="tbl">
+    <tr><th>子网</th><th>网络地址</th><th>可用主机范围</th><th>广播地址</th></tr>
+    <tr><td>1</td><td>192.168.1.0/26</td><td>192.168.1.1 ~ 192.168.1.62</td><td>192.168.1.63</td></tr>
+    <tr><td>2</td><td>192.168.1.64/26</td><td>192.168.1.65 ~ 192.168.1.126</td><td>192.168.1.127</td></tr>
+    <tr><td>3</td><td>192.168.1.128/26</td><td>192.168.1.129 ~ 192.168.1.190</td><td>192.168.1.191</td></tr>
+    <tr><td>4</td><td>192.168.1.192/26</td><td>192.168.1.193 ~ 192.168.1.254</td><td>192.168.1.255</td></tr>
+  </table>
+
+  <div class="demo" id="lab-subnet">
+    <div class="demo-title">🔬 实验室：子网划分计算器</div>
+    <div class="demo-desc">输入任意 IPv4 地址和前缀长度，立刻得到网络地址、广播地址、可用主机范围和地址总数。改前缀看看每个子网怎么变。</div>
+    <div class="lab-grid">
+      <label class="lab-field"><span>IPv4 地址</span><input id="sub-ip" type="text" value="192.168.1.130"></label>
+      <label class="lab-field"><span>前缀长度（/n）</span><input id="sub-prefix" type="number" min="0" max="32" value="26"></label>
+    </div>
+    <div class="demo-ctrl"><button id="sub-calc">计算</button></div>
+    <div class="demo-note" id="sub-msg"></div>
+    <div class="lab-out" id="sub-out"></div>
+  </div>
+
+  <h3 class="sub">4.3.3 CIDR 与路由聚合</h3>
+  <p>CIDR 用 <code class="inline">a.b.c.d/n</code> 表示地址块，取消传统分类，允许任意前缀长度。路由聚合（超网）把多条连续路由合并成一条，减小路由表。</p>
+  <p><b>例：</b>172.16.0.0/24、172.16.1.0/24、172.16.2.0/24、172.16.3.0/24 可以聚合为 <b>172.16.0.0/22</b>，因为前 22 位相同，覆盖 4 个 /24。</p>
+  <p><b>最长前缀匹配：</b>路由表中若有多条匹配，选择前缀最长（最具体）的那条。例：目的 192.168.0.130，路由表有 192.168.0.0/24 和 192.168.0.128/25，应选 /25，因为 .130 落在 .128~.255 范围内。</p>
+
+  <h2 class="sec" id="s4">4.4 ARP、DHCP、ICMP</h2>
+
+  <h3 class="sub">4.4.1 ARP：IP 地址 → MAC 地址</h3>
+  <div class="steps">
+    <div class="step">主机要发数据，先查 ARP 缓存里有没有目的 IP 对应的 MAC。</div>
+    <div class="step">没有就广播 ARP 请求：“谁是 192.168.1.1？请把你的 MAC 告诉我。”</div>
+    <div class="step">目标主机（或网关）单播回复自己的 MAC，请求方写入缓存（有老化时间）。</div>
+    <div class="step">若目的主机不在同一网段，主机解析的是<b>默认网关的 MAC</b>，而不是最终目的主机的 MAC。</div>
+  </div>
+  <div class="callout exam"><div class="co-title">📌 408 高频</div>
+  ARP 请求是<b>广播</b>，ARP 响应是<b>单播</b>；ARP 只在本局域网内使用，不能跨路由器。跨网段通信时，帧的目的 MAC 是网关 MAC，IP 的目的地址仍是最终主机。</div>
+
+  <h3 class="sub">4.4.2 DHCP：自动获取 IP</h3>
+  <p>DHCP 用 UDP，服务器端口 67，客户端端口 68。四个阶段：<b>Discover（发现）→ Offer（提供）→ Request（请求）→ ACK（确认）</b>。客户端初始没有 IP，所以用广播；服务器分配地址时会附带租期、网关、DNS 等信息。</p>
+
+  <h3 class="sub">4.4.3 ICMP：差错与控制报文</h3>
+  <table class="tbl">
+    <tr><th>类型</th><th>典型报文</th><th>用途</th></tr>
+    <tr><td>差错报告</td><td>终点不可达、源点抑制、超时、参数问题、改变路由</td><td>路由器/主机发现转发问题时通知源主机</td></tr>
+    <tr><td>询问</td><td>回送请求/应答、时间戳请求/应答</td><td>ping 测连通性；traceroute 利用 TTL 超时</td></tr>
+  </table>
+  <p>ICMP 封装在 IP 数据报中（协议号 1），<b>不携带用户数据</b>。ping 使用回送请求/应答；traceroute 逐步增加 TTL，利用“超时”差错报文得到路径。</p>
+
+  <h2 class="sec" id="s5">4.5 路由选择协议：RIP、OSPF、BGP</h2>
+  <table class="tbl">
+    <tr><th></th><th>RIP</th><th>OSPF</th><th>BGP</th></tr>
+    <tr><td>类型</td><td>距离向量</td><td>链路状态</td><td>路径向量</td></tr>
+    <tr><td>算法</td><td>Bellman-Ford</td><td>Dijkstra</td><td>路径选择（策略）</td></tr>
+    <tr><td>度量</td><td>跳数，最大 15，16 表示不可达</td><td>代价 cost（带宽等）</td><td>AS 路径 + 策略</td></tr>
+    <tr><td>范围</td><td>自治系统内部（IGP）</td><td>自治系统内部（IGP）</td><td>自治系统之间（EGP）</td></tr>
+    <tr><td>报文/端口</td><td>UDP 520，每 30 s 更新，180 s 失效</td><td>IP 协议号 89，Hello/DD/LSR/LSU/LSAck</td><td>TCP 179，Open/Update/Keepalive/Notification</td></tr>
+    <tr><td>特点</td><td>简单，收敛慢，“坏消息传得慢”</td><td>收敛快，支持区域划分，洪泛链路状态</td><td>不追求最短路径，重视策略和可达性</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 记忆钩子</div>
+  <b>RIP：</b>“跳数 15，UDP 520，30 秒吼一嗓子”。<br>
+  <b>OSPF：</b>“链路状态 Dijkstra，IP 89，划分区域”。<br>
+  <b>BGP：</b>“AS 之间，TCP 179，路径向量”。</div>
+
+  <h2 class="sec" id="s6">4.6 NAT 与 IPv6</h2>
+  <h3 class="sub">4.6.1 NAT 网络地址转换</h3>
+  <p>NAT 让私有地址主机通过一个公网 IP 访问 Internet。路由器维护转换表，把内网 IP:端口 映射为公网 IP:端口（NAPT）。</p>
+  <table class="tbl">
+    <tr><th>优点</th><th>代价</th></tr>
+    <tr><td>节省公网 IPv4 地址；内网结构对外隐藏，有一定安全性</td><td>破坏端到端透明性；外部主动访问内网需要端口映射；某些协议（如 FTP、SIP）需要特殊处理</td></tr>
+  </table>
+
+  <h3 class="sub">4.6.2 IPv6 速览</h3>
+  <table class="tbl">
+    <tr><th>项目</th><th>IPv4</th><th>IPv6</th></tr>
+    <tr><td>地址长度</td><td>32 bit</td><td>128 bit</td></tr>
+    <tr><td>首部</td><td>20 B 基本首部 + 选项</td><td>40 B 固定首部 + 扩展首部</td></tr>
+    <tr><td>校验和</td><td>有首部校验和</td><td>取消首部校验和，交给上下层</td></tr>
+    <tr><td>分片</td><td>路由器可分片</td><td>路由器不分片，源端分片</td></tr>
+    <tr><td>地址类型</td><td>单播、组播、广播</td><td>单播、组播、任播（无广播）</td></tr>
+  </table>
+  <p>IPv6 地址写成 8 组 4 位十六进制，可用 <code class="inline">::</code> 压缩连续 0（只能出现一次）。过渡技术：双协议栈、隧道技术、NAT64。</p>
+
+  <h2 class="sec" id="pit">⚠️ 本章避坑清单</h2>
+  <div class="steps">
+    <div class="step">IP 首部长度单位是 4 B，片偏移单位是 8 B；总长度包含首部。</div>
+    <div class="step">分片时每片数据长度必须是 8 的倍数，最后一片可以不足 8 的倍数。</div>
+    <div class="step">网络地址 = 主机位全 0，广播地址 = 主机位全 1；这两个地址不能分配给主机。</div>
+    <div class="step">/26 的子网掩码是 255.255.255.192，每个子网 64 个地址、62 个可用主机。</div>
+    <div class="step">最长前缀匹配选“前缀最长”的，不是“最早出现”的。</div>
+    <div class="step">ARP 请求广播、响应单播；跨网段解析的是网关 MAC。</div>
+    <div class="step">RIP 最大跳数 15，16 表示不可达；RIP 用 UDP 520，BGP 用 TCP 179。</div>
+    <div class="step">NAT 破坏端到端透明性，外部不能直接主动访问内网主机。</div>
+  </div>
+
+  <h2 class="sec" id="quiz">📝 章内练习（8 题 · 基础 → 提高 → 真题）</h2>
+  <h3 class="sub" style="color:var(--green)">🟢 第一档 · 基础（3 题）</h3>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 1 · 考点：IPv4 首部长度</div>
+    IPv4 首部的最小长度是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 16 B</div>
+      <div class="opt" data-opt="B">B. 20 B</div>
+      <div class="opt" data-opt="C">C. 24 B</div>
+      <div class="opt" data-opt="D">D. 40 B</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>IPv4 基本首部 20 B；首部长度字段以 4 B 为单位，最小值为 5，即 5×4=20 B。IPv6 固定首部才是 40 B。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 2 · 考点：私有地址</div>
+    下列地址中，属于私有地址的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 8.8.8.8</div>
+      <div class="opt" data-opt="B">B. 172.32.1.1</div>
+      <div class="opt" data-opt="C">C. 192.168.10.5</div>
+      <div class="opt" data-opt="D">D. 224.0.0.1</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>私有地址范围是 10.0.0.0/8、172.16.0.0/12（172.16~172.31）、192.168.0.0/16。172.32.1.1 已超出 172.31，8.8.8.8 是公网 DNS，224.0.0.1 是组播地址。</div>
+  </div>
+
+  <div class="quiz" data-answer="A" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 3 · 考点：ARP 的作用</div>
+    ARP 协议的作用是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 把 IP 地址解析为 MAC 地址</div>
+      <div class="opt" data-opt="B">B. 把 MAC 地址解析为 IP 地址</div>
+      <div class="opt" data-opt="C">C. 把域名解析为 IP 地址</div>
+      <div class="opt" data-opt="D">D. 给主机动态分配 IP 地址</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：A。</b>ARP 根据目的 IP 查目的 MAC；RARP 才是 MAC→IP；DNS 做域名→IP；DHCP 动态分配 IP。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--accent)">🟡 第二档 · 提高（3 题）</h3>
+
+  <div class="quiz" data-answer="C" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 4 · 考点：IP 分片</div>
+    一个总长 3000 B 的 IP 数据报（首部 20 B）经过 MTU=1500 B 的链路，至少分成几片？</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 1 片</div>
+      <div class="opt" data-opt="B">B. 2 片</div>
+      <div class="opt" data-opt="C">C. 3 片</div>
+      <div class="opt" data-opt="D">D. 4 片</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>数据部分 2980 B，每片最多 1480 B；2980 = 1480+1480+20，所以 3 片。前两片 MF=1、偏移 0 和 185，最后一片 MF=0、偏移 370。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 5 · 考点：子网广播地址</div>
+    192.168.1.130/26 所在子网的广播地址是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 192.168.1.127</div>
+      <div class="opt" data-opt="B">B. 192.168.1.191</div>
+      <div class="opt" data-opt="C">C. 192.168.1.255</div>
+      <div class="opt" data-opt="D">D. 192.168.1.190</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>/26 的块大小是 64，子网边界为 .0、.64、.128、.192；.130 属于 .128/26，广播地址是 .191，可用范围 .129~.190。</div>
+  </div>
+
+  <div class="quiz" data-answer="D" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 6 · 考点：路由聚合</div>
+    将 172.16.0.0/24、172.16.1.0/24、172.16.2.0/24、172.16.3.0/24 聚合，结果正确的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 172.16.0.0/21</div>
+      <div class="opt" data-opt="B">B. 172.16.0.0/23</div>
+      <div class="opt" data-opt="C">C. 172.16.0.0/24</div>
+      <div class="opt" data-opt="D">D. 172.16.0.0/22</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：D。</b>4 个连续 /24 = 4×256 个地址 = 1024 = 2¹⁰，前缀长度 32−10=22，所以是 172.16.0.0/22，覆盖 172.16.0.0~172.16.3.255。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--brand)">🔵 第三档 · 真题风格（2 题）</h3>
+
+  <div class="quiz" data-answer="B" data-diff="real">
+    <div class="q-head"><div class="q-tag">练习 7 · 考点：跨网段 ARP</div>
+    主机 A（192.168.1.10/24）要访问 192.168.2.20/24，网关为 192.168.1.1。A 发出的以太网帧中，目的 MAC 地址是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 192.168.2.20 对应的 MAC</div>
+      <div class="opt" data-opt="B">B. 网关 192.168.1.1 对应的 MAC</div>
+      <div class="opt" data-opt="C">C. 广播地址 FF-FF-FF-FF-FF-FF</div>
+      <div class="opt" data-opt="D">D. 主机 A 自己的 MAC</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>目的 IP 不在本网段，A 必须把帧发给默认网关，所以帧的目的 MAC 是网关的 MAC；IP 首部的目的地址仍然是 192.168.2.20。网关收到后再重新封装下一跳的帧。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="real">
+    <div class="q-head"><div class="q-tag">练习 8 · 考点：路由协议</div>
+    下列关于路由协议的说法，正确的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. RIP 使用 TCP 520 端口，最大跳数为 16</div>
+      <div class="opt" data-opt="B">B. OSPF 是距离向量协议，使用 Bellman-Ford 算法</div>
+      <div class="opt" data-opt="C">C. BGP 是自治系统之间的路径向量协议，使用 TCP 179 端口</div>
+      <div class="opt" data-opt="D">D. RIP 收敛速度快，适合大型自治系统</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>BGP 用于 AS 之间，是路径向量协议，基于 TCP 179。RIP 用 UDP 520，最大跳数 15（16 表示不可达），收敛慢；OSPF 是链路状态协议，用 Dijkstra。</div>
+  </div>
+
+  <h2 class="sec" id="ck">✅ 本章打卡清单</h2>
+  <div data-ck-scope>
+    <p><span class="progress-pill">0 / 7 已打卡</span></p>
+    <div class="checklist">
+      <label class="check-item" data-ck="ch04-1"><input type="checkbox"><span>能画出 IPv4 首部并说出首部长度、总长度、标识、标志、片偏移、TTL 的作用。</span></label>
+      <label class="check-item" data-ck="ch04-2"><input type="checkbox"><span>独立算对 3000 B 数据报经 MTU=1500 的分片数量、偏移和 MF。</span></label>
+      <label class="check-item" data-ck="ch04-3"><input type="checkbox"><span>能对任意 IP/前缀算出网络地址、广播地址和可用主机范围。</span></label>
+      <label class="check-item" data-ck="ch04-4"><input type="checkbox"><span>会做 4 条连续 /24 路由聚合，并解释最长前缀匹配。</span></label>
+      <label class="check-item" data-ck="ch04-5"><input type="checkbox"><span>能说清 ARP 广播请求/单播响应，以及跨网段为什么解析网关 MAC。</span></label>
+      <label class="check-item" data-ck="ch04-6"><input type="checkbox"><span>能默写 RIP/OSPF/BGP 的算法、端口、适用范围。</span></label>
+      <label class="check-item" data-ck="ch04-7"><input type="checkbox"><span>章内 8 题做完，错题已写清错因。</span></label>
+    </div>
+  </div>
+</div>
+
+<footer>
+  408 计算机网络可视化课堂 · 第 4 章 网络层<br>
+  <div class="pagers">
+    <a href="ch03.html">← 上一章 数据链路层</a><a href="ch05.html">下一章 传输层 →</a><a href="practice.html">去练习场</a>
+  </div>
+</footer>
+<script src="assets/app.js?v=1"></script>
+<script src="assets/labs.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>408 计算机网络可视化课堂 · 零基础也能看懂的考研计算机网络</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<nav class="topbar"><div class="topbar-inner">
+  <a class="logo" href="index.html"><span class="dot"></span>408 计算机网络可视化课堂</a>
+  <div class="nav-links">
+    <a href="index.html">总览</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
+  </div>
+  <button class="theme-btn" title="切换明暗主题">🌙</button>
+</div></nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>把计算机网络「跑」给你看 🌐</h1>
+    <p>这是为 <b>408 考研零基础</b>同学准备的计算机网络学习站：每个协议先从一个生活场景讲起，再用<b>可以动手点的实验室</b>把封装、时延、CRC、子网划分、TCP 握手与拥塞窗口一步步演出来，最后落到 408 高频考点、计算例题、避坑清单和分级练习。</p>
+    <p class="tagline"><span data-ck-total>0 / 0 项已打卡</span> · 6 章 · 8 个交互实验室 · 72 道分级练习 · 打卡进度自动保存在本机浏览器</p>
+  </div>
+
+  <h2 class="sec">为什么这么学</h2>
+  <div class="grid cols-3">
+    <div class="card"><h3>🗣 先说人话</h3><p>把「协议」翻译成日常动作：三次握手像打电话确认双方都在线，子网划分像给一栋楼分房间，NAT 像公司前台帮你转接分机。零基础先建立直觉，再记字段。</p></div>
+    <div class="card"><h3>🔬 再动手算</h3><p>8 个实验室全部可交互：改一个带宽、前缀长度或 ssthresh，结果立刻变化。计算公式不是背出来的，是<b>看着数字动一遍</b>记住的。</p></div>
+    <div class="card"><h3>✍️ 最后落到考试</h3><p>六章共 <b>48 道</b>章内练习，练习场再组 <b>24 道</b>卷（基础/提高/真题/全真模拟）。每题带解析，答错自动进错题本，支持只看错题、收藏、随机抽题。</p></div>
+    <div class="card"><h3>🧭 还教你怎么学</h3><p><a href="method.html">备考方法论</a>独立成页：25 分怎么拆、三轮时间怎么切、计算题专项清单、错题本三栏法、真题两遍法、考场策略——全部是能立刻执行的动作。</p></div>
+  </div>
+
+  <h2 class="sec">知识体系总览 · 计算机网络篇</h2>
+  <p class="muted">对齐 408 考纲，六章全部上线。每章 = 零基础讲解 + 计算例题 + 交互实验室 + 高频考点/避坑 + 8 题分级练习 + 打卡清单。</p>
+  <div class="grid cols-2" style="margin-top:14px">
+    <a class="card clickable" href="ch01.html">
+      <span class="ch-num">第 1 章 · 已上线</span>
+      <h3>计算机网络体系结构</h3>
+      <p>网络组成 / 电路·报文·分组交换 / 时延与带宽 / OSI 七层与 TCP-IP / 封装与设备层次。</p>
+      <div class="chips"><span class="chip hot">实验室：封装过程</span><span class="chip">实验室：时延计算</span><span class="chip">8 题分级练习</span></div>
+    </a>
+    <a class="card clickable" href="ch02.html">
+      <span class="ch-num">第 2 章 · 已上线</span>
+      <h3>物理层</h3>
+      <p>码元与波特率 / 奈氏准则 / 香农定理 / 编码与调制 / 传输介质 / 复用与 CDMA。</p>
+      <div class="chips"><span class="chip hot">实验室：奈氏 &amp; 香农</span><span class="chip">8 题分级练习</span></div>
+    </a>
+    <a class="card clickable" href="ch03.html">
+      <span class="ch-num">第 3 章 · 已上线</span>
+      <h3>数据链路层</h3>
+      <p>帧定界与透明传输 / CRC / 停止等待·GBN·SR / CSMA-CD / 以太网与交换机。</p>
+      <div class="chips"><span class="chip hot">实验室：CRC 计算</span><span class="chip">8 题分级练习</span></div>
+    </a>
+    <a class="card clickable" href="ch04.html">
+      <span class="ch-num">第 4 章 · 已上线</span>
+      <h3>网络层</h3>
+      <p>IPv4 与分片 / 子网划分与 CIDR / ARP·DHCP·ICMP / RIP·OSPF·BGP / IPv6。</p>
+      <div class="chips"><span class="chip hot">实验室：子网划分</span><span class="chip">8 题分级练习</span></div>
+    </a>
+    <a class="card clickable" href="ch05.html">
+      <span class="ch-num">第 5 章 · 已上线</span>
+      <h3>传输层</h3>
+      <p>端口与复用 / UDP / TCP 首部 / 三次握手·四次挥手 / 可靠传输 / 流量与拥塞控制。</p>
+      <div class="chips"><span class="chip hot">实验室：三次握手</span><span class="chip">实验室：拥塞窗口</span><span class="chip">8 题分级练习</span></div>
+    </a>
+    <a class="card clickable" href="ch06.html">
+      <span class="ch-num">第 6 章 · 已上线</span>
+      <h3>应用层</h3>
+      <p>DNS / FTP / 电子邮件 / HTTP / HTTP 版本演进 / 非持久与持久连接的 RTT 计算。</p>
+      <div class="chips"><span class="chip hot">实验室：DNS 解析</span><span class="chip">8 题分级练习</span></div>
+    </a>
+  </div>
+
+  <h2 class="sec">计算机网络在 408 中的位置</h2>
+  <p>408 总分 150 分，计算机网络约占 <b>25 分</b>：通常 8 道单选（16 分）+ 1 道综合应用题（约 9 分）。分值不如数据结构，但<b>题型固定、计算套路化，是性价比很高的一科</b>。</p>
+  <table class="tbl">
+    <tr><th>题型</th><th>数量与分值</th><th>网络部分常见考法</th><th>目标</th></tr>
+    <tr><td>单项选择题</td><td>约 8 题 × 2 分 = 16 分</td><td>分层与设备、时延/奈氏/香农、CRC、滑动窗口、子网划分、TCP 握手与拥塞控制、DNS/HTTP</td><td>最多错 1 题</td></tr>
+    <tr><td>综合应用题</td><td>约 1 题 × 9 分</td><td>子网划分 + 路由表、TCP 拥塞窗口、CSMA/CD 与帧、DNS/HTTP 时延综合</td><td>按采分点拿 7 分以上</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 先记住这句话</div>
+  计算机网络不是“背协议”，而是<b>“记住一条数据从应用到网线再回来的路径”</b>。每学一层都问自己：这一层给数据加了什么头？解决了上一层的什么问题？出问题时会体现在哪个字段？</div>
+
+  <h2 class="sec">🔬 交互实验室（8 个）</h2>
+  <p>不用装软件，打开网页就能改参数、看结果。每个实验室都对应一类 408 计算题。</p>
+  <table class="tbl">
+    <tr><th>实验室</th><th>所在章节</th><th>你会亲手验证什么</th></tr>
+    <tr><td><a href="ch01.html#lab-encap">封装与解封装</a></td><td>第 1 章</td><td>应用数据如何一层层加上 TCP/IP/MAC 首部，最后变成比特</td></tr>
+    <tr><td><a href="ch01.html#lab-delay">时延计算器</a></td><td>第 1 章</td><td>发送时延、传播时延、时延带宽积、RTT 的独立变化</td></tr>
+    <tr><td><a href="ch02.html#lab-capacity">奈氏 &amp; 香农</a></td><td>第 2 章</td><td>带宽、电平数、信噪比如何共同决定最高数据率</td></tr>
+    <tr><td><a href="ch03.html#lab-crc">CRC 计算器</a></td><td>第 3 章</td><td>模 2 除法求余数，生成可发送的帧</td></tr>
+    <tr><td><a href="ch04.html#lab-subnet">子网划分计算器</a></td><td>第 4 章</td><td>给定 IP/前缀，求网络地址、广播地址、可用主机范围</td></tr>
+    <tr><td><a href="ch05.html#lab-hs">TCP 三次握手</a></td><td>第 5 章</td><td>seq/ack 如何变化，双方状态如何迁移</td></tr>
+    <tr><td><a href="ch05.html#lab-cwnd">拥塞窗口模拟</a></td><td>第 5 章</td><td>慢开始、拥塞避免、超时/快重传后 cwnd 与 ssthresh 的变化</td></tr>
+    <tr><td><a href="ch06.html#lab-dns">DNS 解析步骤</a></td><td>第 6 章</td><td>递归查询与迭代查询到底谁问谁，根/顶级/权威服务器各做什么</td></tr>
+  </table>
+
+  <h2 class="sec">学习路径（零基础）</h2>
+  <div class="steps">
+    <div class="step"><b>第 0 步 · 先建地图：</b>先读第 1 章，把“分层、封装、PDU、设备”四件事弄明白。后面五章都是在这张地图上填细节。</div>
+    <div class="step"><b>第 1 步 · 按 01 → 06 顺序过章：</b>每章先读生活类比 → 分节详解 → 跟着例题手算一遍 → 点实验室验证 → 做 8 题 → 勾打卡。</div>
+    <div class="step"><b>第 2 步 · 计算题专项：</b>把时延、奈氏/香农、CRC、滑动窗口、子网划分、拥塞窗口六类题各集中练 5 道，直到不看公式也能列式。</div>
+    <div class="step"><b>第 3 步 · 去练习场：</b>按基础卷 → 提高卷 → 真题卷 → 全真模拟卷推进；错题自动进错题本，用“只看错题”二刷。</div>
+    <div class="step"><b>第 4 步 · 真题与复盘：</b>近 15 年真题至少两遍。第一遍按章节做，第二遍按套卷限时做；每道错题写清“错因 + 对应知识点 + 下次动作”。</div>
+    <div class="step"><b>第 5 步 · 别只顾学：</b>先读<a href="method.html">备考方法论</a>。网络 25 分的目标不是“学完”，而是“会做固定的那几类题”。</div>
+  </div>
+
+  <div class="callout ok"><div class="co-title">📌 使用说明</div>
+  1. 每章结构固定：学习目标 → 生活类比 → 分节详解 → 计算例题 → 交互实验室 → 避坑清单 → 章内练习 → 打卡；<br>
+  2. 打卡、答题进度、错题本、收藏全部存在浏览器 localStorage，换页面不丢；<br>
+  3. 本站定位是“教材的图解字典 + 计算题训练场”，不能替代系统看教材和网课。</div>
+</div>
+
+<footer>
+  408 计算机网络可视化课堂 · 零基础讲解 + 计算实验室 + 分级题库 + 备考方法论<br>
+  <div class="pagers">
+    <a href="ch01.html">开始学习 第 1 章 →</a><a href="practice.html">去练习场 →</a><a href="method.html">先看方法论 →</a>
+  </div>
+</footer>
+<script src="assets/app.js?v=1"></script>
+<script src="assets/labs.js?v=1"></script>
+</body>
+</html>

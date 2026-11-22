@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 3 章 数据链路层 · 408 计算机网络可视化课堂</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<nav class="topbar"><div class="topbar-inner">
+  <a class="logo" href="index.html"><span class="dot"></span>408 计算机网络可视化课堂</a>
+  <div class="nav-links">
+    <a href="index.html">总览</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
+  </div>
+  <button class="theme-btn" title="切换明暗主题">🌙</button>
+</div></nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>第 3 章 · 数据链路层</h1>
+    <p>这一层管“相邻两个结点之间怎么可靠地传一帧”：怎么定界、怎么检错、丢了怎么重传、多台主机抢一根线怎么办。408 的计算题和概念题都很密集。</p>
+    <p class="tagline">预计学习 4~5 小时 · 1 个交互实验室 · 8 题练习 · 打卡 7 项</p>
+  </div>
+
+  <div class="toc"><span class="toc-label">本页导航</span><a href="#goal">学习目标</a><a href="#s1">功能与帧</a><a href="#s2">透明传输</a><a href="#s3">差错控制</a><a href="#s4">流量控制</a><a href="#s5">介质访问控制</a><a href="#s6">以太网与交换机</a><a href="#s7">PPP</a><a href="#pit">避坑清单</a><a href="#quiz">章内练习</a><a href="#ck">打卡</a></div>
+
+  <div class="callout exam" id="goal"><div class="co-title">🎯 学习目标（学完你应该能）</div>
+  ① 说出数据链路层的四个核心功能，区分“链路”和“数据链路”；<br>
+  ② 会用字符填充、零比特填充实现透明传输；<br>
+  ③ 会做 CRC 模 2 除法，判断接收帧是否出错；<br>
+  ④ 区分停止等待、GBN、SR 的窗口大小、确认方式和重传范围；<br>
+  ⑤ 算对停止等待/滑动窗口的信道利用率，算对 CSMA/CD 的最短帧长；<br>
+  ⑥ 说清以太网帧格式、交换机自学习过程、冲突域与广播域。</div>
+
+  <h2 class="sec" id="s1">3.1 数据链路层到底在做什么</h2>
+  <div class="callout life"><div class="co-title">📦 生活类比</div>
+  网络层说“把这箱货送到上海”，数据链路层负责<b>把货装上这一段的卡车、封好箱、贴好封条、确认这一站收到了</b>。它只管“相邻两站之间”这一跳，不负责全程。</div>
+  <p><b>链路</b>是一条无源的点到点物理线路；<b>数据链路</b>是在链路上加上实现通信协议的软件和硬件。数据链路层的主要功能：</p>
+  <div class="steps">
+    <div class="step"><b>封装成帧：</b>在数据前后加首部和尾部，形成帧，让接收端知道“从哪里开始、到哪里结束”。</div>
+    <div class="step"><b>透明传输：</b>数据里出现和帧定界符一样的比特组合时，要能转义，保证任何数据都能原样传输。</div>
+    <div class="step"><b>差错控制：</b>用 CRC 等校验发现比特错误；发现不了或需要恢复时，交给上层重传。</div>
+    <div class="step"><b>流量控制：</b>防止发送方发得太快，把接收方缓存撑爆。</div>
+    <div class="step"><b>介质访问控制：</b>多台主机共享同一广播信道时，决定“谁先发”。</div>
+  </div>
+
+  <h2 class="sec" id="s2">3.2 封装成帧与透明传输</h2>
+  <h3 class="sub">3.2.1 四种帧定界方法</h3>
+  <table class="tbl">
+    <tr><th>方法</th><th>做法</th><th>缺点 / 考点</th></tr>
+    <tr><td>字符计数法</td><td>帧头用一个计数字段标明帧长</td><td>计数字段出错会导致后续帧全部错位</td></tr>
+    <tr><td>字符填充法</td><td>用特殊字符定界，数据中出现定界符/转义符时加转义字符</td><td>面向字节，适合文本；PPP 使用</td></tr>
+    <tr><td>零比特填充法</td><td>帧界为 01111110；数据中每出现 5 个连续 1 就插入一个 0</td><td>面向比特，HDLC 使用；408 高频</td></tr>
+    <tr><td>违规编码法</td><td>用介质编码中不会出现的码元组合做帧界</td><td>物理层编码相关，如曼彻斯特编码</td></tr>
+  </table>
+
+  <h3 class="sub">3.2.2 零比特填充：5 个 1 插 0</h3>
+  <p>HDLC 用 <code class="inline">01111110</code> 作为帧的起始和结束标志。为了避免数据里出现同样的 8 位组合，发送端在数据中每遇到<b>连续 5 个 1</b> 就插入一个 0；接收端每遇到连续 5 个 1，就把后面的 0 删掉。</p>
+  <pre class="code">原始数据：  1 1 1 1 1 1 0 0 1 1 1 1 1 1
+填充后：    1 1 1 1 1 0 1 0 0 1 1 1 1 1 0 1
+                    ↑ 插 0          ↑ 插 0
+接收端看到 5 个连续 1 后的 0 就删除，恢复原数据。</pre>
+  <div class="callout exam"><div class="co-title">📌 408 考法</div>
+  给一段比特流问“填充后有多少位/是什么”，或问“接收端如何还原”。记住：<b>只在连续 5 个 1 后插 0，不是 5 个 0</b>。</div>
+
+  <h2 class="sec" id="s3">3.3 差错控制：奇偶校验、CRC、海明码</h2>
+
+  <h3 class="sub">3.3.1 奇偶校验</h3>
+  <p>在数据后加 1 位校验位，使整个码字中 1 的个数为奇数（奇校验）或偶数（偶校验）。它能发现<b>奇数个</b>比特错误，但发现不了偶数个错误，也不能纠错。</p>
+
+  <h3 class="sub">3.3.2 CRC 循环冗余校验</h3>
+  <p>发送端和接收端约定一个生成多项式 G(x)，对应一个二进制除数。发送端在数据后补“G 的位数−1”个 0，做<b>模 2 除法</b>，把余数作为 FCS 附在数据后面。接收端用同一个 G 去除，余数为 0 就认为无差错。</p>
+  <div class="formula">
+    数据 D，生成多项式 G（r+1 位）→ 补 r 个 0 → D·2<sup>r</sup> ÷ G（模 2）→ 余数 R（r 位）<br>
+    <b>发送帧 = D + R</b>；接收端 (D+R) ÷ G 的余数为 0。
+  </div>
+  <p><b>例：</b>数据 1101，G = 101（r=2）。补 00 得 110100，模 2 除以 101，余数为 10，所以发送 110110。</p>
+  <div class="callout warn"><div class="co-title">⚠️ CRC 不是纠错码</div>
+  CRC 只能<b>检错</b>，不能定位和纠正错误；发现错误后通常丢弃该帧，由上层重传。它能检出所有单比特、双比特错误和奇数个错误，但存在极小的漏检概率。</div>
+
+  <div class="demo" id="lab-crc">
+    <div class="demo-title">🔬 实验室：CRC 计算器</div>
+    <div class="demo-desc">输入数据比特和生成多项式（二进制），自动做模 2 除法，给出余数和最终发送帧。默认就是上面的例子。</div>
+    <div class="lab-grid">
+      <label class="lab-field"><span>数据比特</span><input id="crc-data" type="text" value="1101"></label>
+      <label class="lab-field"><span>生成多项式 G</span><input id="crc-gen" type="text" value="101"></label>
+    </div>
+    <div class="demo-ctrl"><button id="crc-calc">计算 CRC</button></div>
+    <div class="demo-note" id="crc-msg"></div>
+    <div id="crc-out"></div>
+  </div>
+
+  <h3 class="sub">3.3.3 海明码（纠错码，了解）</h3>
+  <p>海明码通过增加 r 个校验位，使校验位能定位 1 位错误。若数据位 k 位，校验位 r 位，需要满足 <b>2<sup>r</sup> ≥ k + r + 1</b>。校验位放在 2<sup>i</sup> 的位置（1、2、4、8…），每个校验位负责一组数据位。408 偶尔考“需要几位校验位”，记住不等式即可。</p>
+
+  <h2 class="sec" id="s4">3.4 流量控制与可靠传输</h2>
+  <div class="callout life"><div class="co-title">🚰 生活类比</div>
+  发送方像往杯子里倒水，接收方像杯子。流量控制就是“杯子快满了就喊停”；可靠传输就是“没收到就说没收到，重发”。</div>
+
+  <h3 class="sub">3.4.1 停止等待协议（Stop-and-Wait）</h3>
+  <p>每发一帧就停下来，等对方确认（ACK）后再发下一帧。若超时没收到 ACK，就重传。它简单，但信道利用率低：</p>
+  <div class="formula">
+    <b>U = T<sub>d</sub> ÷ (T<sub>d</sub> + RTT + T<sub>a</sub>)</b><br>
+    T<sub>d</sub> = 帧发送时延 = L/C；T<sub>a</sub> = 确认帧发送时延（常忽略）。
+  </div>
+  <p><b>例：</b>帧长 1000 bit，速率 1 Mbps，RTT=100 ms，忽略确认帧。T<sub>d</sub>=1 ms，U=1/(1+100)≈0.99%。也就是说，链路 99% 的时间在等确认。</p>
+
+  <h3 class="sub">3.4.2 后退 N 帧协议（GBN）</h3>
+  <p>发送方可以连续发多帧，接收方只按序接收，用<b>累积确认</b>：确认第 n 帧表示前 n 帧都收到了。若第 n 帧出错，发送方从第 n 帧开始<b>全部重传</b>。</p>
+  <div class="formula">
+    序号位数 n → 窗口最大值 <b>W ≤ 2<sup>n</sup> − 1</b><br>
+    例：n=3，W 最大 7；n=4，W 最大 15。
+  </div>
+
+  <h3 class="sub">3.4.3 选择重传协议（SR）</h3>
+  <p>接收方可以缓存乱序到达的帧，只重传出错的那一帧。发送方每帧单独计时、单独确认。</p>
+  <div class="formula">
+    序号位数 n → 窗口最大值 <b>W ≤ 2<sup>n−1</sup></b><br>
+    例：n=3，W 最大 4；n=4，W 最大 8。
+  </div>
+  <table class="tbl">
+    <tr><th>协议</th><th>窗口</th><th>确认方式</th><th>重传范围</th><th>接收缓存</th></tr>
+    <tr><td>停止等待</td><td>1</td><td>逐帧确认</td><td>当前帧</td><td>不需要</td></tr>
+    <tr><td>GBN</td><td>≤ 2<sup>n</sup>−1</td><td>累积确认</td><td>从出错帧起全部重传</td><td>不需要（按序交付）</td></tr>
+    <tr><td>SR</td><td>≤ 2<sup>n−1</sup></td><td>逐帧确认</td><td>只重传出错帧</td><td>需要缓存乱序帧</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 滑动窗口下的信道利用率</div>
+  若窗口为 W，忽略确认帧：<b>U = min(1, W·T<sub>d</sub> / (T<sub>d</sub> + RTT))</b>。当 W 大到能“填满”一个 RTT 的链路时，利用率达到 100%。</div>
+
+  <h2 class="sec" id="s5">3.5 介质访问控制：一根线怎么分给多个人</h2>
+  <h3 class="sub">3.5.1 信道划分</h3>
+  <p>FDMA 按频率分、TDMA 按时隙分、CDMA 按码片分。它们都属于“预先分配、不会冲突”，适合连续、稳定的业务；但对突发数据不够灵活。</p>
+
+  <h3 class="sub">3.5.2 随机访问：ALOHA 与 CSMA</h3>
+  <table class="tbl">
+    <tr><th>协议</th><th>做法</th><th>效率 / 特点</th></tr>
+    <tr><td>纯 ALOHA</td><td>想发就发，冲突后随机重发</td><td>最大吞吐率约 18.4%</td></tr>
+    <tr><td>时隙 ALOHA</td><td>只能在时隙开始发送</td><td>最大吞吐率约 36.8%</td></tr>
+    <tr><td>1-坚持 CSMA</td><td>监听忙则等，空闲立刻发（概率 1）</td><td>冲突概率较高</td></tr>
+    <tr><td>非坚持 CSMA</td><td>忙则随机等一段时间再听</td><td>冲突少，但可能浪费空闲</td></tr>
+    <tr><td>p-坚持 CSMA</td><td>空闲时以概率 p 发送，以 1−p 推迟</td><td>折中方案</td></tr>
+  </table>
+
+  <h3 class="sub">3.5.3 CSMA/CD（以太网）</h3>
+  <p>CSMA/CD 的核心是四句话：<b>先听后发、边听边发、冲突停发、随机重发</b>。它用于早期共享式以太网。</p>
+  <div class="formula">
+    争用期 = 2τ（τ 为单程传播时延）<br>
+    <b>最短帧长 = 2τ × 发送速率</b><br>
+    10 Mbps 以太网规定 2τ = 51.2 μs，所以最短帧 = 512 bit = 64 B。
+  </div>
+  <p><b>为什么要有最短帧长？</b>如果帧太短，发送方可能在冲突信号传回来之前就发完了，于是误以为发送成功。只有帧的发送时间 ≥ 2τ，才能保证“边发边听”时一定能听到冲突。</p>
+  <p><b>二进制指数退避：</b>第 k 次冲突后，从 <b>{0, 1, …, 2<sup>k</sup>−1}</b> 中随机取一个数作为退避的争用期个数；k 超过 10 后按 10 计算，最多退避 16 次。</p>
+
+  <h3 class="sub">3.5.4 CSMA/CA（无线局域网）</h3>
+  <p>无线网卡很难在发送时同时检测冲突（自己的信号太强），所以改成“先避免、再确认”：发送前监听并随机退避，接收方收到后必须回 ACK；可选 RTS/CTS 预约信道。CSMA/CA 不能完全避免冲突，只能降低概率。</p>
+
+  <h2 class="sec" id="s6">3.6 以太网、交换机与 VLAN</h2>
+
+  <h3 class="sub">3.6.1 以太网帧格式（DIX Ethernet V2）</h3>
+  <table class="tbl">
+    <tr><th>字段</th><th>长度</th><th>作用</th></tr>
+    <tr><td>目的 MAC 地址</td><td>6 B</td><td>接收方硬件地址</td></tr>
+    <tr><td>源 MAC 地址</td><td>6 B</td><td>发送方硬件地址</td></tr>
+    <tr><td>类型</td><td>2 B</td><td>上层协议，如 0x0800 表示 IPv4</td></tr>
+    <tr><td>数据</td><td>46~1500 B</td><td>网络层分组；不足 46 B 要填充</td></tr>
+    <tr><td>FCS</td><td>4 B</td><td>CRC 校验</td></tr>
+  </table>
+  <p>帧的最小长度 64 B（6+6+2+46+4），最大 1518 B（不含前导码）。<b>MTU=1500 B</b> 指数据字段最大值。前导码 8 B 用于同步，通常不计入帧长度。</p>
+  <p>MAC 地址 48 bit，前 24 bit 是厂商标识，后 24 bit 由厂商分配；全 1 地址 FF-FF-FF-FF-FF-FF 是广播地址。</p>
+
+  <h3 class="sub">3.6.2 交换机如何转发</h3>
+  <div class="steps">
+    <div class="step"><b>自学习：</b>收到帧后，把“源 MAC → 入端口”写入转发表，并记录时间戳。</div>
+    <div class="step"><b>查表转发：</b>查目的 MAC：找到了就从对应端口转发；找不到就向除入端口外的所有端口<b>泛洪</b>。</div>
+    <div class="step"><b>广播/组播：</b>目的地址是广播或未知组播时，向所有其他端口泛洪。</div>
+    <div class="step"><b>老化：</b>表项长时间不用就删除，适应主机移动。</div>
+  </div>
+  <table class="tbl">
+    <tr><th>设备</th><th>冲突域</th><th>广播域</th><th>转发依据</th></tr>
+    <tr><td>集线器</td><td>所有端口同一个</td><td>所有端口同一个</td><td>广播比特</td></tr>
+    <tr><td>交换机</td><td>每个端口一个</td><td>默认所有端口同一个</td><td>MAC 地址</td></tr>
+    <tr><td>路由器</td><td>每个接口一个</td><td>每个接口一个</td><td>IP 地址</td></tr>
+  </table>
+
+  <h3 class="sub">3.6.3 VLAN</h3>
+  <p>VLAN 把一个物理交换机划分成多个逻辑局域网，每个 VLAN 是一个独立广播域。IEEE 802.1Q 在以太网帧中插入 4 B 标签（含 12 bit VLAN ID），交换机根据标签决定转发范围。VLAN 能隔离广播、提高安全性和灵活性，但不同 VLAN 之间通信仍需路由器或三层交换机。</p>
+
+  <h2 class="sec" id="s7">3.7 PPP 协议（广域网链路）</h2>
+  <p>PPP 是点对点协议，面向字节，常用于拨号/宽带接入。帧格式：标志 0x7E、地址 0xFF、控制 0x03、协议、信息、FCS、标志 0x7E。它用字节填充解决透明传输：数据中出现 0x7E 或 0x7D 时，前面加 0x7D 并异或 0x20。</p>
+  <div class="callout warn"><div class="co-title">⚠️ PPP 不保证可靠</div>
+  PPP 只做差错检测（FCS），不提供序号、确认和重传，也不做流量控制；它把可靠传输交给上层。选择题常问“PPP 是否提供可靠传输”，答案是否定的。</div>
+
+  <h2 class="sec" id="pit">⚠️ 本章避坑清单</h2>
+  <div class="steps">
+    <div class="step">零比特填充是“连续 5 个 1 后插 0”，不是 5 个 0；接收端要删除这个 0。</div>
+    <div class="step">CRC 是检错码不是纠错码；余数为 0 只表示“未检出错误”，不代表绝对无错。</div>
+    <div class="step">GBN 窗口 ≤ 2ⁿ−1，SR 窗口 ≤ 2ⁿ⁻¹，两个公式别记反。</div>
+    <div class="step">GBN 用累积确认，出错后从出错帧起全部重传；SR 只重传出错帧。</div>
+    <div class="step">停止等待利用率分母是 T<sub>d</sub>+RTT+T<sub>a</sub>，不是 RTT。</div>
+    <div class="step">CSMA/CD 最短帧长 = 2τ×速率；10 Mbps 以太网是 64 B，不是 1518 B。</div>
+    <div class="step">交换机隔离冲突域但不隔离广播域；VLAN 才隔离广播域。</div>
+    <div class="step">PPP 只检错，不提供可靠传输、不提供流量控制。</div>
+  </div>
+
+  <h2 class="sec" id="quiz">📝 章内练习（8 题 · 基础 → 提高 → 真题）</h2>
+  <h3 class="sub" style="color:var(--green)">🟢 第一档 · 基础（3 题）</h3>
+
+  <div class="quiz" data-answer="C" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 1 · 考点：零比特填充</div>
+    HDLC 采用零比特填充实现透明传输。若数据中出现连续 5 个 1，发送端应：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 在 5 个 1 后插入一个 1</div>
+      <div class="opt" data-opt="B">B. 在 5 个 1 前插入一个 0</div>
+      <div class="opt" data-opt="C">C. 在 5 个 1 后插入一个 0</div>
+      <div class="opt" data-opt="D">D. 把 5 个 1 改成 5 个 0</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>发送端每遇到连续 5 个 1 就插入一个 0，避免数据中出现与帧界 01111110 相同的组合；接收端看到 5 个连续 1 后的 0 就删除。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 2 · 考点：CRC 余数</div>
+    数据为 1101，生成多项式为 G=101，CRC 余数是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 01</div>
+      <div class="opt" data-opt="B">B. 10</div>
+      <div class="opt" data-opt="C">C. 11</div>
+      <div class="opt" data-opt="D">D. 00</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>数据后补 2 个 0 得 110100，模 2 除以 101，余数为 10，所以发送帧是 110110。可用上方 CRC 实验室验证。</div>
+  </div>
+
+  <div class="quiz" data-answer="A" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 3 · 考点：GBN 窗口</div>
+    采用后退 N 帧协议，序号用 3 位二进制表示，发送窗口的最大值为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 7</div>
+      <div class="opt" data-opt="B">B. 8</div>
+      <div class="opt" data-opt="C">C. 4</div>
+      <div class="opt" data-opt="D">D. 3</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：A。</b>GBN 发送窗口 W ≤ 2ⁿ−1 = 2³−1 = 7。若取 8，接收方无法区分“新帧”和“重传帧”，会出现二义性。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--accent)">🟡 第二档 · 提高（3 题）</h3>
+
+  <div class="quiz" data-answer="C" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 4 · 考点：SR 窗口</div>
+    采用选择重传协议，序号用 4 位二进制表示，接收窗口的最大值为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 15</div>
+      <div class="opt" data-opt="B">B. 16</div>
+      <div class="opt" data-opt="C">C. 8</div>
+      <div class="opt" data-opt="D">D. 4</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>SR 窗口 W ≤ 2ⁿ⁻¹ = 2⁴⁻¹ = 8。SR 需要缓存乱序帧，窗口不能超过序号空间的一半。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 5 · 考点：停止等待利用率</div>
+    帧长 1000 bit，链路速率 1 Mbps，往返时延 RTT=100 ms，忽略确认帧发送时延。停止等待协议的信道利用率约为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 10%</div>
+      <div class="opt" data-opt="B">B. 1%</div>
+      <div class="opt" data-opt="C">C. 50%</div>
+      <div class="opt" data-opt="D">D. 100%</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>T<sub>d</sub>=1000/10⁶=1 ms；U=1/(1+100)=1/101≈0.99%，约 1%。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 6 · 考点：CSMA/CD 最短帧长</div>
+    某 CSMA/CD 网络速率为 10 Mbps，单程传播时延为 25.6 μs，则最短帧长为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 256 bit</div>
+      <div class="opt" data-opt="B">B. 512 bit（即 64 B）</div>
+      <div class="opt" data-opt="C">C. 1024 bit</div>
+      <div class="opt" data-opt="D">D. 2048 bit</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>最短帧长 = 2τ×R = 2×25.6 μs×10 Mbps = 51.2 μs×10⁷ b/s = 512 bit = 64 B。这正是 10 Mbps 以太网的标准值。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--brand)">🔵 第三档 · 真题风格（2 题）</h3>
+
+  <div class="quiz" data-answer="B" data-diff="real">
+    <div class="q-head"><div class="q-tag">练习 7 · 考点：交换机与广播域</div>
+    一台交换机连接 4 台计算机，下列说法正确的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 4 台计算机同属一个冲突域和一个广播域</div>
+      <div class="opt" data-opt="B">B. 4 台计算机分属 4 个冲突域，但同属一个广播域</div>
+      <div class="opt" data-opt="C">C. 4 台计算机分属 4 个冲突域和 4 个广播域</div>
+      <div class="opt" data-opt="D">D. 交换机不隔离冲突域，但隔离广播域</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>交换机每个端口是一个独立的冲突域，所以 4 个端口有 4 个冲突域；但广播帧会泛洪到所有端口，默认仍是一个广播域。要隔离广播域需要划分 VLAN 或使用路由器。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="real">
+    <div class="q-head"><div class="q-tag">练习 8 · 考点：PPP 的特点</div>
+    下列关于 PPP 协议的说法，正确的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. PPP 提供序号、确认和重传，因此是可靠传输协议</div>
+      <div class="opt" data-opt="B">B. PPP 采用零比特填充实现透明传输</div>
+      <div class="opt" data-opt="C">C. PPP 面向字节，采用字节填充，只检错不纠错，不保证可靠交付</div>
+      <div class="opt" data-opt="D">D. PPP 工作在网络层，用于路由器之间交换路由</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>PPP 是数据链路层协议，面向字节，用 0x7D 做字节填充；它有 FCS 检错，但没有序号、确认、重传和流量控制，不保证可靠交付。零比特填充是 HDLC 的做法。</div>
+  </div>
+
+  <h2 class="sec" id="ck">✅ 本章打卡清单</h2>
+  <div data-ck-scope>
+    <p><span class="progress-pill">0 / 7 已打卡</span></p>
+    <div class="checklist">
+      <label class="check-item" data-ck="ch03-1"><input type="checkbox"><span>能说出数据链路层的四个核心功能，并区分链路与数据链路。</span></label>
+      <label class="check-item" data-ck="ch03-2"><input type="checkbox"><span>能独立完成一段零比特填充，并说明接收端如何还原。</span></label>
+      <label class="check-item" data-ck="ch03-3"><input type="checkbox"><span>能算对 1101 / G=101 的 CRC 余数，并解释接收端如何校验。</span></label>
+      <label class="check-item" data-ck="ch03-4"><input type="checkbox"><span>能默写 GBN 与 SR 的窗口上限，并说清累积确认与逐帧确认的区别。</span></label>
+      <label class="check-item" data-ck="ch03-5"><input type="checkbox"><span>能算对停止等待的信道利用率，并解释为什么它效率低。</span></label>
+      <label class="check-item" data-ck="ch03-6"><input type="checkbox"><span>能推导 CSMA/CD 最短帧长，并说清 2τ 和二进制指数退避。</span></label>
+      <label class="check-item" data-ck="ch03-7"><input type="checkbox"><span>章内 8 题做完，错题已写清错因。</span></label>
+    </div>
+  </div>
+</div>
+
+<footer>
+  408 计算机网络可视化课堂 · 第 3 章 数据链路层<br>
+  <div class="pagers">
+    <a href="ch02.html">← 上一章 物理层</a><a href="ch04.html">下一章 网络层 →</a><a href="practice.html">去练习场</a>
+  </div>
+</footer>
+<script src="assets/app.js?v=1"></script>
+<script src="assets/labs.js?v=1"></script>
+</body>
+</html>

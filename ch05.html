@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 5 章 传输层 · 408 计算机网络可视化课堂</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<nav class="topbar"><div class="topbar-inner">
+  <a class="logo" href="index.html"><span class="dot"></span>408 计算机网络可视化课堂</a>
+  <div class="nav-links">
+    <a href="index.html">总览</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
+  </div>
+  <button class="theme-btn" title="切换明暗主题">🌙</button>
+</div></nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>第 5 章 · 传输层</h1>
+    <p>网络层把分组送到主机，传输层才把数据交给“正确的进程”。这一章的主线是 TCP：怎么建立连接、怎么保证可靠、怎么控制流量、怎么应对拥塞。计算题几乎都围绕 cwnd 和 ssthresh。</p>
+    <p class="tagline">预计学习 5~6 小时 · 2 个交互实验室 · 8 题练习 · 打卡 7 项</p>
+  </div>
+
+  <div class="toc"><span class="toc-label">本页导航</span><a href="#goal">学习目标</a><a href="#s1">端口与复用</a><a href="#s2">UDP</a><a href="#s3">TCP 首部</a><a href="#s4">连接管理</a><a href="#s5">可靠传输</a><a href="#s6">流量控制</a><a href="#s7">拥塞控制</a><a href="#pit">避坑清单</a><a href="#quiz">章内练习</a><a href="#ck">打卡</a></div>
+
+  <div class="callout exam" id="goal"><div class="co-title">🎯 学习目标（学完你应该能）</div>
+  ① 说出传输层“进程到进程”的通信含义，区分端口、IP、socket；<br>
+  ② 对比 UDP 与 TCP 的首部、特点、适用场景；<br>
+  ③ 完整画出三次握手和四次挥手，写出每一步的 seq/ack 与状态；<br>
+  ④ 解释 TIME_WAIT 为什么等 2MSL；<br>
+  ⑤ 说清超时重传、快速重传、流量控制、拥塞控制的区别；<br>
+  ⑥ 根据 ssthresh 和丢包轮次，画出 cwnd 变化曲线并算对数值。</div>
+
+  <h2 class="sec" id="s1">5.1 传输层：从“主机”到“进程”</h2>
+  <div class="callout life"><div class="co-title">🏢 生活类比</div>
+  IP 地址只能把快递送到<b>公司前台</b>（主机），传输层的端口号才知道要交给<b>哪个部门</b>（进程）。IP 地址 + 端口号 = 完整的收件地址，这就是 socket。</div>
+  <p><b>传输层功能：</b>为不同主机上的应用进程提供逻辑通信；提供复用/分用；可选地提供可靠传输、流量控制、拥塞控制。</p>
+  <table class="tbl">
+    <tr><th>概念</th><th>含义</th></tr>
+    <tr><td>端口号</td><td>16 bit，0~65535，标识主机内的一个进程</td></tr>
+    <tr><td>socket</td><td>IP 地址 + 端口号，唯一标识网络中的一个端点</td></tr>
+    <tr><td>复用</td><td>发送方多个应用进程共用同一个传输层协议发送</td></tr>
+    <tr><td>分用</td><td>接收方根据端口号把数据交给正确的应用进程</td></tr>
+  </table>
+  <h3 class="sub">端口分类与常见端口</h3>
+  <table class="tbl">
+    <tr><th>范围</th><th>名称</th><th>说明</th></tr>
+    <tr><td>0~1023</td><td>熟知端口</td><td>固定分配给常用服务</td></tr>
+    <tr><td>1024~49151</td><td>登记端口</td><td>IANA 登记，供普通服务使用</td></tr>
+    <tr><td>49152~65535</td><td>临时端口</td><td>客户端临时使用，通信结束释放</td></tr>
+  </table>
+  <table class="tbl">
+    <tr><th>应用</th><th>端口</th><th>传输层协议</th></tr>
+    <tr><td>FTP 控制 / 数据</td><td>21 / 20（主动）</td><td>TCP</td></tr>
+    <tr><td>SSH / Telnet</td><td>22 / 23</td><td>TCP</td></tr>
+    <tr><td>SMTP / POP3 / IMAP</td><td>25 / 110 / 143</td><td>TCP</td></tr>
+    <tr><td>DNS</td><td>53</td><td>UDP（区域传送用 TCP）</td></tr>
+    <tr><td>DHCP</td><td>67（服务器）/ 68（客户端）</td><td>UDP</td></tr>
+    <tr><td>HTTP / HTTPS</td><td>80 / 443</td><td>TCP</td></tr>
+    <tr><td>BGP / RIP</td><td>179 / 520</td><td>TCP / UDP</td></tr>
+  </table>
+
+  <h2 class="sec" id="s2">5.2 UDP：简单到极致</h2>
+  <p>UDP 只在 IP 之上加了 8 B 首部：源端口、目的端口、长度、校验和。它<b>无连接、不可靠、无流量控制、无拥塞控制</b>，但开销小、延迟低，支持一对一、一对多、多对多。</p>
+  <table class="tbl">
+    <tr><th>优点</th><th>代价 / 适用</th></tr>
+    <tr><td>首部小、无连接建立、实时性好；支持组播/广播</td><td>不保证到达、不保证顺序；应用自己处理重传/排序。适合 DNS、DHCP、TFTP、视频/语音、游戏</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 UDP 校验和</div>
+  UDP 校验和计算时要加<b>伪首部</b>（源 IP、目的 IP、协议号、UDP 长度），目的是让接收方能确认数据报确实到达了正确的主机和协议。伪首部只参与计算，不实际传输。</div>
+
+  <h2 class="sec" id="s3">5.3 TCP 首部：20 B 里的信息</h2>
+  <table class="tbl">
+    <tr><th>字段</th><th>长度</th><th>作用 / 考点</th></tr>
+    <tr><td>源端口 / 目的端口</td><td>各 16 bit</td><td>标识发送/接收进程</td></tr>
+    <tr><td>序号 seq</td><td>32 bit</td><td>本报文段第一个字节的序号；初始序号 ISN 随机</td></tr>
+    <tr><td>确认号 ack</td><td>32 bit</td><td>期望收到的下一个字节序号；ack=N 表示 N−1 及之前都收到了</td></tr>
+    <tr><td>数据偏移</td><td>4 bit</td><td>首部长度，单位 4 B；最小 5（20 B）</td></tr>
+    <tr><td>标志位</td><td>6 bit</td><td>URG、ACK、PSH、RST、SYN、FIN</td></tr>
+    <tr><td>窗口</td><td>16 bit</td><td>接收窗口 rwnd，用于流量控制</td></tr>
+    <tr><td>校验和</td><td>16 bit</td><td>校验首部 + 数据 + 伪首部</td></tr>
+    <tr><td>紧急指针</td><td>16 bit</td><td>URG=1 时指出紧急数据末尾</td></tr>
+  </table>
+  <div class="callout warn"><div class="co-title">⚠️ 序号按字节编号</div>
+  TCP 是<b>字节流</b>协议：seq 指的是“这个报文段第一个字节在整个字节流中的位置”，不是“第几个报文段”。若一个报文段携带 100 B，seq=1001，则下一个报文段 seq=1101。</div>
+
+  <h2 class="sec" id="s4">5.4 连接管理：三次握手与四次挥手</h2>
+
+  <h3 class="sub">5.4.1 三次握手</h3>
+  <pre class="code">客户端                                     服务器
+  |------------ SYN=1, seq=x -------------->|   客户端：SYN_SENT
+  |<------ SYN=1, ACK=1, seq=y, ack=x+1 ----|   服务器：SYN_RCVD
+  |------------ ACK=1, seq=x+1, ack=y+1 --->|   双方：ESTABLISHED</pre>
+  <div class="steps">
+    <div class="step"><b>第一次：</b>客户端发送 SYN，告诉服务器“我想建连接，我的初始序号是 x”。</div>
+    <div class="step"><b>第二次：</b>服务器回复 SYN+ACK，既确认 x，又告诉客户端自己的初始序号 y。</div>
+    <div class="step"><b>第三次：</b>客户端确认 y。此时双方都确认了对方的发送和接收能力，连接建立。</div>
+  </div>
+  <div class="callout exam"><div class="co-title">📌 为什么是三次，不是两次</div>
+  两次只能让服务器确认“客户端能发、服务器能收”，但服务器无法确认“客户端能收、服务器能发”。第三次 ACK 让服务器确认自己的 SYN 被收到。另一个作用是<b>防止旧连接请求</b>：网络中滞留的旧 SYN 到达服务器，若只两次握手，服务器会直接建立一个无效连接；三次握手下客户端不会发第三次 ACK，服务器最终超时释放。</div>
+
+  <div class="demo" id="lab-hs">
+    <div class="demo-title">🔬 实验室：TCP 三次握手</div>
+    <div class="demo-desc">点“下一步”逐条看报文和状态变化。注意 seq 和 ack 的对应关系。</div>
+    <div class="step-list" id="hs-steps"></div>
+    <div class="demo-ctrl">
+      <button id="hs-next">下一步 →</button>
+      <button id="hs-reset" class="ghost">重置</button>
+    </div>
+    <div class="demo-note" id="hs-note"></div>
+  </div>
+
+  <h3 class="sub">5.4.2 四次挥手</h3>
+  <pre class="code">客户端                                     服务器
+  |------------ FIN=1, seq=u ------------->|   客户端：FIN_WAIT_1
+  |<----------- ACK=1, ack=u+1 ------------|   服务器：CLOSE_WAIT
+  |<----------- FIN=1, seq=w, ack=u+1 -----|   服务器：LAST_ACK
+  |------------ ACK=1, ack=w+1 ----------->|   客户端：TIME_WAIT → 2MSL → CLOSED</pre>
+  <p>TCP 是全双工的，两个方向要分别关闭，所以需要四次。服务器收到 FIN 后可能还有数据要发，因此先回 ACK，等数据发完再发自己的 FIN。</p>
+  <div class="callout exam"><div class="co-title">📌 TIME_WAIT 为什么等 2MSL</div>
+  ① 保证最后一个 ACK 能到达服务器：若 ACK 丢失，服务器会重发 FIN，客户端还能再回 ACK；<br>
+  ② 让本连接中滞留的旧报文段在网络中消失，避免影响下一个使用相同端口的新连接。<br>
+  MSL 是报文段最大生存时间，2MSL 是一个往返的上限。</div>
+
+  <h3 class="sub">5.4.3 状态与攻击</h3>
+  <p>常见状态：CLOSED、LISTEN、SYN_SENT、SYN_RCVD、ESTABLISHED、FIN_WAIT_1、FIN_WAIT_2、CLOSE_WAIT、LAST_ACK、TIME_WAIT。SYN Flood 攻击就是大量半开连接停在 SYN_RCVD，耗尽服务器 backlog。</p>
+
+  <h2 class="sec" id="s5">5.5 可靠传输：确认、重传、排序</h2>
+  <div class="steps">
+    <div class="step"><b>序号与确认：</b>每个字节都有序号，接收方用累积确认告诉发送方“我已经连续收到哪里”。</div>
+    <div class="step"><b>超时重传：</b>发送方为报文段设置定时器，超时未收到 ACK 就重传。RTO 根据 RTT 动态估算。</div>
+    <div class="step"><b>快速重传：</b>发送方连续收到 <b>3 个重复 ACK</b>，不等超时就重传丢失的报文段。</div>
+    <div class="step"><b>选择确认 SACK：</b>接收方告诉发送方哪些不连续的块已经收到，减少不必要的重传。</div>
+  </div>
+  <p><b>Karn 算法：</b>重传的报文段不用于更新 RTT 估计，避免“重传还是原报文”的歧义；RTO 采用指数退避。</p>
+
+  <h2 class="sec" id="s6">5.6 流量控制：别把接收方撑爆</h2>
+  <p>接收方通过 TCP 首部的<b>窗口字段 rwnd</b> 告诉发送方“我还能接收多少字节”。发送方未确认的数据不能超过 rwnd。</p>
+  <div class="formula">
+    <b>发送窗口 = min(rwnd, cwnd)</b><br>
+    rwnd：接收方通告的窗口（流量控制）；cwnd：发送方估计的拥塞窗口（拥塞控制）。
+  </div>
+  <p>当 rwnd=0 时，发送方停止发送，并定期发送<b>零窗口探针</b>，询问接收方窗口是否恢复。</p>
+  <div class="callout warn"><div class="co-title">⚠️ 流量控制 ≠ 拥塞控制</div>
+  流量控制是<b>点对点</b>的，防止接收方缓存溢出；拥塞控制是<b>全局</b>的，防止网络中的路由器和链路过载。两者共同决定发送窗口，取较小值。</div>
+
+  <h2 class="sec" id="s7">5.7 拥塞控制：慢开始、拥塞避免、快重传、快恢复</h2>
+  <p>TCP Reno 维护 <b>cwnd（拥塞窗口）</b>和 <b>ssthresh（慢开始门限）</b>：</p>
+  <table class="tbl">
+    <tr><th>阶段</th><th>条件</th><th>cwnd 怎么变</th></tr>
+    <tr><td>慢开始</td><td>cwnd &lt; ssthresh</td><td>每经过一个 RTT 翻倍（指数增长）</td></tr>
+    <tr><td>拥塞避免</td><td>cwnd ≥ ssthresh</td><td>每经过一个 RTT 加 1（线性增长）</td></tr>
+    <tr><td>超时</td><td>重传计时器超时</td><td>ssthresh = cwnd/2，cwnd = 1，重新慢开始</td></tr>
+    <tr><td>快重传</td><td>收到 3 个重复 ACK</td><td>立即重传丢失报文段，不等待超时</td></tr>
+    <tr><td>快恢复</td><td>快重传后</td><td>ssthresh = cwnd/2，cwnd = ssthresh，直接进入拥塞避免</td></tr>
+  </table>
+  <p><b>例：</b>初始 cwnd=1，ssthresh=8，第 6 轮发生超时。cwnd 变化：</p>
+  <pre class="code">轮次：      1   2   3   4   5   6(超时)
+cwnd：      1 → 2 → 4 → 8 → 9 → 10
+超时后：ssthresh = 10/2 = 5，cwnd = 1
+轮次：      7   8   9   10  11  12
+cwnd：      1 → 2 → 4 → 5 → 6 → 7
+            └─慢开始─┘  └─拥塞避免─┘</pre>
+
+  <div class="demo" id="lab-cwnd">
+    <div class="demo-title">🔬 实验室：TCP 拥塞窗口模拟</div>
+    <div class="demo-desc">设置初始 ssthresh、丢包轮次和处理方式，观察 cwnd 曲线。鼠标悬停数据点可看具体数值。</div>
+    <div class="lab-grid">
+      <label class="lab-field"><span>初始 ssthresh</span><input id="cw-ssthresh" type="number" min="2" value="8"></label>
+      <label class="lab-field"><span>丢包轮次</span><input id="cw-loss" type="number" min="2" value="6"></label>
+      <label class="lab-field"><span>总轮次</span><input id="cw-rounds" type="number" min="5" max="30" value="16"></label>
+      <label class="lab-field"><span>丢包类型</span>
+        <select id="cw-mode"><option value="timeout">超时（cwnd 回 1）</option><option value="fast">3 个重复 ACK（快恢复）</option></select>
+      </label>
+    </div>
+    <div class="demo-ctrl"><button id="cw-calc">重新计算</button></div>
+    <svg id="cw-svg" class="tcp-chart" viewBox="0 0 760 280" role="img" aria-label="拥塞窗口变化曲线"></svg>
+    <div class="chart-legend"><span><i style="background:var(--brand)"></i>cwnd（MSS）</span><span>横轴：传输轮次 RTT</span></div>
+    <div class="demo-note" id="cw-note"></div>
+  </div>
+
+  <h2 class="sec" id="pit">⚠️ 本章避坑清单</h2>
+  <div class="steps">
+    <div class="step">端口号标识进程，IP 标识主机；socket = IP + 端口。</div>
+    <div class="step">TCP 序号按字节编号，不是按报文段编号；ack=N 表示 N−1 及之前都收到。</div>
+    <div class="step">三次握手第三次可以携带数据，前两次不能携带数据。</div>
+    <div class="step">四次挥手是因为 TCP 全双工，两个方向要分别关闭；TIME_WAIT 等 2MSL。</div>
+    <div class="step">发送窗口 = min(rwnd, cwnd)；流量控制看接收方，拥塞控制看网络。</div>
+    <div class="step">慢开始是“每 RTT 翻倍”，不是“每收到一个 ACK 加 1”；拥塞避免才是每 RTT 加 1。</div>
+    <div class="step">超时后 cwnd=1；快重传/快恢复后 cwnd=ssthresh，不是 1。</div>
+    <div class="step">UDP 无连接、不可靠，但支持广播/组播；TCP 一对一、面向字节流。</div>
+  </div>
+
+  <h2 class="sec" id="quiz">📝 章内练习（8 题 · 基础 → 提高 → 真题）</h2>
+  <h3 class="sub" style="color:var(--green)">🟢 第一档 · 基础（3 题）</h3>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 1 · 考点：端口号</div>
+    DNS 使用的熟知端口号是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 80</div>
+      <div class="opt" data-opt="B">B. 53</div>
+      <div class="opt" data-opt="C">C. 25</div>
+      <div class="opt" data-opt="D">D. 110</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>DNS 使用 53 端口，通常基于 UDP；区域传送等场景使用 TCP。80 是 HTTP，25 是 SMTP，110 是 POP3。</div>
+  </div>
+
+  <div class="quiz" data-answer="A" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 2 · 考点：UDP 首部</div>
+    UDP 首部的固定长度是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 8 B</div>
+      <div class="opt" data-opt="B">B. 12 B</div>
+      <div class="opt" data-opt="C">C. 20 B</div>
+      <div class="opt" data-opt="D">D. 40 B</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：A。</b>UDP 首部只有源端口、目的端口、长度、校验和四个字段，各 2 B，共 8 B；TCP 首部最小 20 B。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 3 · 考点：三次握手序号</div>
+    客户端初始序号 x=100，服务器初始序号 y=300。三次握手中，客户端第三次发送的 ACK 报文段，其 seq 和 ack 分别是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. seq=100，ack=300</div>
+      <div class="opt" data-opt="B">B. seq=100，ack=301</div>
+      <div class="opt" data-opt="C">C. seq=101，ack=301</div>
+      <div class="opt" data-opt="D">D. seq=301，ack=101</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>服务器第二次发送 ack=x+1=101、seq=y=300；客户端第三次确认服务器，所以 seq=x+1=101、ack=y+1=301。注意 SYN 占一个序号。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--accent)">🟡 第二档 · 提高（3 题）</h3>
+
+  <div class="quiz" data-answer="D" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 4 · 考点：TIME_WAIT</div>
+    TCP 四次挥手中，主动关闭方进入 TIME_WAIT 状态并等待 2MSL，主要目的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 等待服务器发送数据</div>
+      <div class="opt" data-opt="B">B. 让服务器先关闭连接</div>
+      <div class="opt" data-opt="C">C. 防止客户端被 SYN Flood 攻击</div>
+      <div class="opt" data-opt="D">D. 保证最后一个 ACK 能到达，并让旧报文段在网络中消失</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：D。</b>若最后一个 ACK 丢失，服务器会重发 FIN，客户端在 2MSL 内还能再回 ACK；同时等待旧连接的滞留报文段过期，避免干扰使用相同端口的新连接。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 5 · 考点：发送窗口</div>
+    某 TCP 连接中，接收方通告的窗口 rwnd=2000 B，发送方估计的拥塞窗口 cwnd=1500 B，则发送方当前最多能发送的未确认数据量为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 2000 B</div>
+      <div class="opt" data-opt="B">B. 1500 B</div>
+      <div class="opt" data-opt="C">C. 3500 B</div>
+      <div class="opt" data-opt="D">D. 500 B</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>发送窗口取 rwnd 和 cwnd 的较小值：min(2000,1500)=1500 B。流量控制和拥塞控制同时限制发送速率。</div>
+  </div>
+
+  <div class="quiz" data-answer="A" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 6 · 考点：慢开始</div>
+    初始 cwnd=1，ssthresh=8，没有发生丢包。经过 3 个 RTT 后，cwnd 变为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 8</div>
+      <div class="opt" data-opt="B">B. 6</div>
+      <div class="opt" data-opt="C">C. 4</div>
+      <div class="opt" data-opt="D">D. 3</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：A。</b>慢开始每 RTT 翻倍：1→2→4→8。第 3 个 RTT 后到达 8，正好等于 ssthresh；之后进入拥塞避免，每 RTT 加 1。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--brand)">🔵 第三档 · 真题风格（2 题）</h3>
+
+  <div class="quiz" data-answer="C" data-diff="real">
+    <div class="q-head"><div class="q-tag">练习 7 · 考点：拥塞窗口变化</div>
+    某 TCP 连接初始 cwnd=1，ssthresh=16。第 5 轮发生超时，第 6 轮开始重新慢开始。第 5 轮超时后的 ssthresh 和 cwnd 分别是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. ssthresh=8，cwnd=8</div>
+      <div class="opt" data-opt="B">B. ssthresh=16，cwnd=1</div>
+      <div class="opt" data-opt="C">C. ssthresh=8，cwnd=1</div>
+      <div class="opt" data-opt="D">D. ssthresh=4，cwnd=4</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>cwnd 变化：1→2→4→8→16（第 4 轮后到 16），第 5 轮进入拥塞避免变为 17，此时超时。ssthresh = 17/2 取整 8（教材常按当前 cwnd 的一半），cwnd=1，重新慢开始。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="real">
+    <div class="q-head"><div class="q-tag">练习 8 · 考点：快重传与快恢复</div>
+    发送方连续收到 3 个重复 ACK，下列处理正确的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 立即把 cwnd 置为 1，重新慢开始</div>
+      <div class="opt" data-opt="B">B. 立即重传丢失的报文段，ssthresh=cwnd/2，cwnd=ssthresh，进入拥塞避免</div>
+      <div class="opt" data-opt="C">C. 忽略重复 ACK，继续等待超时</div>
+      <div class="opt" data-opt="D">D. 关闭连接，重新三次握手</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>3 个重复 ACK 说明某个报文段丢失，触发快重传；快恢复把 ssthresh 设为 cwnd/2，cwnd 设为新 ssthresh，直接进入拥塞避免，而不是回到 1。超时才回到 1。</div>
+  </div>
+
+  <h2 class="sec" id="ck">✅ 本章打卡清单</h2>
+  <div data-ck-scope>
+    <p><span class="progress-pill">0 / 7 已打卡</span></p>
+    <div class="checklist">
+      <label class="check-item" data-ck="ch05-1"><input type="checkbox"><span>能区分 IP、端口、socket，并说出三类端口范围。</span></label>
+      <label class="check-item" data-ck="ch05-2"><input type="checkbox"><span>能默写 UDP 的 8 B 首部和四个字段，说出 UDP 的优缺点与适用场景。</span></label>
+      <label class="check-item" data-ck="ch05-3"><input type="checkbox"><span>能画出 TCP 三次握手，写出每一步 seq/ack 和状态。</span></label>
+      <label class="check-item" data-ck="ch05-4"><input type="checkbox"><span>能画出四次挥手，解释为什么需要四次、TIME_WAIT 为什么等 2MSL。</span></label>
+      <label class="check-item" data-ck="ch05-5"><input type="checkbox"><span>能说清超时重传、快速重传、SACK、流量控制的区别。</span></label>
+      <label class="check-item" data-ck="ch05-6"><input type="checkbox"><span>能独立画出 cwnd 变化曲线，算对超时/快恢复后的 ssthresh 和 cwnd。</span></label>
+      <label class="check-item" data-ck="ch05-7"><input type="checkbox"><span>章内 8 题做完，错题已写清错因。</span></label>
+    </div>
+  </div>
+</div>
+
+<footer>
+  408 计算机网络可视化课堂 · 第 5 章 传输层<br>
+  <div class="pagers">
+    <a href="ch04.html">← 上一章 网络层</a><a href="ch06.html">下一章 应用层 →</a><a href="practice.html">去练习场</a>
+  </div>
+</footer>
+<script src="assets/app.js?v=1"></script>
+<script src="assets/labs.js?v=1"></script>
+</body>
+</html>

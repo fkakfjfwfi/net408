@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 1 章 计算机网络体系结构 · 408 计算机网络可视化课堂</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<nav class="topbar"><div class="topbar-inner">
+  <a class="logo" href="index.html"><span class="dot"></span>408 计算机网络可视化课堂</a>
+  <div class="nav-links">
+    <a href="index.html">总览</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
+  </div>
+  <button class="theme-btn" title="切换明暗主题">🌙</button>
+</div></nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>第 1 章 · 计算机网络体系结构</h1>
+    <p>这是整门课的地图。先把“网络由什么组成、数据怎么走、为什么要分层”弄明白，后面五章才不会变成一堆散落的协议名。</p>
+    <p class="tagline">预计学习 3~4 小时 · 2 个交互实验室 · 8 题练习 · 打卡 6 项</p>
+  </div>
+
+  <div class="toc"><span class="toc-label">本页导航</span><a href="#goal">学习目标</a><a href="#s1">网络是什么</a><a href="#s2">三种交换</a><a href="#s3">性能指标</a><a href="#s4">分层结构</a><a href="#s5">设备与封装</a><a href="#deep">进阶深挖</a><a href="#pit">避坑清单</a><a href="#quiz">章内练习</a><a href="#ck">打卡</a></div>
+
+  <div class="callout exam" id="goal"><div class="co-title">🎯 学习目标（学完你应该能）</div>
+  ① 说出计算机网络的组成三要素，区分“网络边缘”和“网络核心”；<br>
+  ② 对比电路交换、报文交换、分组交换的优缺点，判断给定场景该选哪种；<br>
+  ③ 独立计算发送时延、传播时延、总时延、时延带宽积和 RTT；<br>
+  ④ 画出 OSI 七层、TCP/IP 四层、五层模型的对应关系，说出每层的 PDU 和典型设备；<br>
+  ⑤ 说清“封装/解封装”的过程，以及为什么分层能降低复杂度。</div>
+
+  <h2 class="sec" id="s1">1.1 先说人话：计算机网络到底是什么</h2>
+  <div class="callout life"><div class="co-title">📞 生活类比</div>
+  计算机网络就像<b>一个公司里的电话系统</b>：每个人（主机）都有自己的分机号（IP 地址），前台（路由器）知道怎么把电话转到别的楼层，通话双方还要约定“先说什么、后说什么”（协议）。只把电脑用网线连起来，没有地址和约定，那不叫网络，那叫一堆连在一起的铁盒子。</div>
+  <p><b>定义：</b>计算机网络是将地理位置不同的、具有独立功能的多台计算机，通过通信设备与线路连接起来，在网络协议和网络软件的支持下，实现资源共享和信息传递的系统。</p>
+  <div class="steps">
+    <div class="step"><b>要素一 · 多台独立计算机。</b>每台机器能自己运行程序，不是一台主机的多个终端。否则叫“多终端系统”，不叫计算机网络。</div>
+    <div class="step"><b>要素二 · 通信介质与设备。</b>双绞线、光纤、无线电是“路”；网卡、交换机、路由器是“路口和交通灯”。</div>
+    <div class="step"><b>要素三 · 协议。</b>双方必须遵守同一套规则：怎么表示地址、怎么开始、怎么确认、出错怎么办。协议是网络的“共同语言”。</div>
+  </div>
+
+  <h3 class="sub">网络的组成：边缘 + 核心</h3>
+  <table class="tbl">
+    <tr><th>部分</th><th>包含什么</th><th>作用</th><th>408 常见问法</th></tr>
+    <tr><td><b>网络边缘</b></td><td>主机、手机、服务器、客户端进程</td><td>产生和消费数据，运行应用</td><td>端系统、C/S 与 P2P 模式</td></tr>
+    <tr><td><b>网络核心</b></td><td>路由器、交换机、通信链路</td><td>把数据从一端转发到另一端</td><td>分组交换、存储转发、路由选择</td></tr>
+    <tr><td><b>接入网</b></td><td>家庭宽带、校园网、蜂窝网</td><td>把边缘接入核心</td><td>接入方式与带宽</td></tr>
+  </table>
+
+  <h3 class="sub">两种工作模式</h3>
+  <div class="grid cols-2">
+    <div class="card"><h3>客户/服务器（C/S）</h3><p>客户端主动请求，服务器被动等待并响应。服务器需要固定地址、长期在线；优点是管理集中，缺点是服务器可能成为瓶颈。典型：浏览器访问网站、邮件客户端收信。</p></div>
+    <div class="card"><h3>对等（P2P）</h3><p>每个节点既是客户端又是服务器，直接交换资源。优点是扩展性好、不依赖中心服务器；缺点是管理困难、质量不稳定。典型：BitTorrent。</p></div>
+  </div>
+
+  <h3 class="sub">按覆盖范围分类</h3>
+  <table class="tbl">
+    <tr><th>类型</th><th>范围</th><th>典型例子</th></tr>
+    <tr><td>PAN（个域网）</td><td>约 10 m</td><td>蓝牙耳机、手机热点</td></tr>
+    <tr><td>LAN（局域网）</td><td>一栋楼/校园</td><td>以太网、Wi-Fi</td></tr>
+    <tr><td>MAN（城域网）</td><td>一个城市</td><td>城市宽带骨干</td></tr>
+    <tr><td>WAN（广域网）</td><td>跨城市/国家</td><td>运营商骨干网、Internet</td></tr>
+  </table>
+
+  <h2 class="sec" id="s2">1.2 三种交换方式：数据到底怎么“走”</h2>
+  <div class="callout life"><div class="co-title">🚗 生活类比</div>
+  <b>电路交换</b>像提前包下整条高速车道，从头到尾只给你用；<b>报文交换</b>像把一整车货直接交给物流，物流在中转站整車换车；<b>分组交换</b>像把货拆成小包裹，每个包裹自己贴地址，中转站可以同时转发很多人的包裹。</div>
+
+  <h3 class="sub">1.2.1 电路交换（Circuit Switching）</h3>
+  <p>通信前必须先<b>建立一条专用物理通路</b>，整个通信过程分为三个阶段：<b>连接建立 → 数据传输 → 连接释放</b>。传统电话网就是典型代表。</p>
+  <table class="tbl">
+    <tr><th>优点</th><th>缺点</th></tr>
+    <tr><td>通信时延小、实时性强；数据按序到达；没有存储转发开销</td><td>建立连接时间长；线路被独占，利用率低；灵活性差，双方速率必须匹配</td></tr>
+  </table>
+  <p class="muted">408 常考：电路交换适合<b>长时间、连续、实时</b>的大流量通信（如语音），不适合突发性的计算机数据。</p>
+
+  <h3 class="sub">1.2.2 报文交换（Message Switching）</h3>
+  <p>把整个报文（应用层的一整块数据）作为一个整体交给交换设备，采用<b>存储转发</b>：先完整收下，检查后再转发到下一跳。</p>
+  <table class="tbl">
+    <tr><th>优点</th><th>缺点</th></tr>
+    <tr><td>不需要建立连接；线路按需使用，利用率比电路交换高；可以给不同用户排队</td><td>整个报文可能很大，要求结点有足够大的缓存；存储转发时延大；不适合实时业务</td></tr>
+  </table>
+
+  <h3 class="sub">1.2.3 分组交换（Packet Switching）</h3>
+  <p>把报文拆成若干个<b>分组（packet）</b>，每个分组加上首部（含目的地址、序号等），独立选择路径、独立存储转发。Internet 用的就是分组交换。</p>
+  <div class="callout exam"><div class="co-title">📌 分组交换为什么赢了</div>
+  <b>① 流水线效应：</b>不需要等整个报文收完，第一个分组就可以先转发，后面分组并行推进，总时延显著降低。<br>
+  <b>② 灵活：</b>某个结点或链路故障，后续分组可以改走别的路。<br>
+  <b>③ 公平：</b>大文件被拆小，不会长期霸占链路，适合突发数据。<br>
+  <b>代价：</b>每个分组都要加首部（开销）；分组可能乱序、丢失、重复；结点需要排队，排队时延不可预测。</div>
+
+  <table class="tbl">
+    <tr><th>维度</th><th>电路交换</th><th>报文交换</th><th>分组交换</th></tr>
+    <tr><td>是否建立连接</td><td>必须</td><td>不需要</td><td>不需要（数据报方式）</td></tr>
+    <tr><td>数据单位</td><td>比特流</td><td>整个报文</td><td>分组</td></tr>
+    <tr><td>转发方式</td><td>直通</td><td>存储转发</td><td>存储转发</td></tr>
+    <tr><td>线路利用率</td><td>低</td><td>较高</td><td>高</td></tr>
+    <tr><td>时延</td><td>小且稳定</td><td>大</td><td>较小但抖动</td></tr>
+    <tr><td>适用业务</td><td>语音、实时流</td><td>早期电报、非实时文件</td><td>互联网数据</td></tr>
+  </table>
+
+  <h3 class="sub">1.2.4 一张图记住“存储转发”</h3>
+  <pre class="code">发送端 ──▶ 结点1 ──▶ 结点2 ──▶ 接收端
+
+报文交换：  [======== 整个报文 ========] 收完才发下一站
+分组交换：  [P1] [P2] [P3] [P4]         P1 到结点1 时，P2 还在路上
+            └── 流水线：不同分组可以同时占用不同链路 ──┘</pre>
+  <div class="callout warn"><div class="co-title">⚠️ 易错点</div>
+  分组交换<b>不保证</b>按序到达、不保证不丢失，可靠性要靠上层（TCP）来补。选择题常把“分组交换一定按序到达”设为错误选项。</div>
+
+  <h2 class="sec" id="s3">1.3 性能指标：408 计算题的主战场</h2>
+  <p>这一节必须会手算。先把五个概念分清：<b>速率、带宽、吞吐量、时延、时延带宽积</b>。</p>
+
+  <h3 class="sub">1.3.1 速率与带宽</h3>
+  <table class="tbl">
+    <tr><th>名词</th><th>含义</th><th>单位与注意</th></tr>
+    <tr><td>速率（数据率）</td><td>单位时间内传输的比特数</td><td>b/s、kbps、Mbps、Gbps；<b>1 k = 10³，不是 1024</b></td></tr>
+    <tr><td>带宽</td><td>链路能传输的最高数据率，理想上限</td><td>单位同速率；不是“频率宽度”的唯一含义</td></tr>
+    <tr><td>吞吐量</td><td>单位时间内实际通过某个网络的数据量</td><td>受瓶颈链路限制，≤ 带宽</td></tr>
+  </table>
+  <div class="callout warn"><div class="co-title">⚠️ 单位陷阱</div>
+  数据长度常用字节 B，速率常用比特 b：<b>1 B = 8 bit</b>。题目给 1000 B、100 Mbps，先换成 8000 bit 再除，否则差 8 倍。</div>
+
+  <h3 class="sub">1.3.2 时延：四个组成部分</h3>
+  <div class="formula">
+    <b>总时延 = 发送时延 + 传播时延 + 处理时延 + 排队时延</b><br>
+    发送时延 = 数据长度 L ÷ 发送速率 R　（把比特推上链路的时间）<br>
+    传播时延 = 链路长度 d ÷ 传播速度 v　（信号在介质中跑的时间）
+  </div>
+  <table class="tbl">
+    <tr><th>时延</th><th>由什么决定</th><th>怎么变小</th></tr>
+    <tr><td>发送时延</td><td>数据量、网卡/链路发送速率</td><td>提高带宽、减少数据量</td></tr>
+    <tr><td>传播时延</td><td>物理距离、介质中的光速/电速</td><td>缩短距离；换介质提升有限</td></tr>
+    <tr><td>处理时延</td><td>路由器查表、校验、排队调度</td><td>更强设备、优化协议</td></tr>
+    <tr><td>排队时延</td><td>当前网络拥塞程度</td><td>拥塞控制、扩容</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 高频结论</div>
+  “提高链路带宽”只能降低<b>发送时延</b>，不能降低<b>传播时延</b>。所以“光纤带宽很大，因此北京到纽约的时延可以忽略”是错的。</div>
+
+  <h3 class="sub">1.3.3 例题：一步一步算</h3>
+  <p>一个 1000 B 的分组，经过 100 Mbps 的链路发送，链路长 1000 km，信号传播速度 2×10⁵ km/s。忽略处理与排队时延，求发送时延、传播时延、总时延、时延带宽积和 RTT。</p>
+  <pre class="code">L = 1000 B = 8000 bit
+R = 100 Mbps = 100 × 10⁶ b/s
+发送时延 = 8000 / (100×10⁶) = 80×10⁻⁶ s = 80 μs
+
+d = 1000 km，v = 2×10⁵ km/s
+传播时延 = 1000 / (2×10⁵) = 5×10⁻³ s = 5 ms
+
+总时延 = 80 μs + 5 ms = 5.08 ms
+时延带宽积 = R × 传播时延 = 100×10⁶ × 5×10⁻³ = 5×10⁵ bit = 62.5 KB
+RTT = 2 × 传播时延 = 10 ms</pre>
+  <div class="callout ok"><div class="co-title">✅ 时延带宽积怎么理解</div>
+  它表示“链路这条管子最多能装多少比特”。100 Mbps × 5 ms = 500 kbit，相当于 62.5 KB 的数据正在路上。它不是带宽，也不是时延，单位是<b>比特</b>。</div>
+
+  <h3 class="sub">1.3.4 利用率</h3>
+  <div class="formula">
+    信道利用率 = 有数据通过的时间 ÷ 总时间　（≤ 1）<br>
+    网络利用率 = 所有链路利用率的加权平均
+  </div>
+  <p>利用率不是越高越好。排队论告诉我们：利用率接近 1 时，排队时延会急剧上升。所以实际网络通常把利用率控制在 50% 左右留余量。</p>
+
+  <div class="demo" id="lab-delay">
+    <div class="demo-title">🔬 实验室：时延计算器</div>
+    <div class="demo-desc">改数据量、带宽、距离和传播速度，观察发送时延与传播时延各自怎么变。默认值就是上面的例题。</div>
+    <div class="lab-grid">
+      <label class="lab-field"><span>数据长度（B）</span><input id="dly-l" type="number" min="1" value="1000"></label>
+      <label class="lab-field"><span>发送速率（Mbps）</span><input id="dly-r" type="number" min="0.001" step="0.1" value="100"></label>
+      <label class="lab-field"><span>链路长度（km）</span><input id="dly-d" type="number" min="0" value="1000"></label>
+      <label class="lab-field"><span>传播速度（km/s）</span><input id="dly-v" type="number" min="1" value="200000"></label>
+    </div>
+    <div class="lab-out">
+      <div class="kv">发送时延<b id="dly-tx">—</b><small>L / R</small></div>
+      <div class="kv">传播时延<b id="dly-prop">—</b><small>d / v</small></div>
+      <div class="kv">总时延<b id="dly-total">—</b><small>忽略处理与排队</small></div>
+      <div class="kv">时延带宽积<b id="dly-bdp">—</b><small>R × 传播时延</small></div>
+      <div class="kv">RTT<b id="dly-rtt">—</b><small>2 × 传播时延</small></div>
+    </div>
+    <div class="demo-note" id="dly-note"></div>
+  </div>
+
+  <h2 class="sec" id="s4">1.4 分层体系结构：把大象装进冰箱</h2>
+  <div class="callout life"><div class="co-title">🏢 生活类比</div>
+  寄快递：你只管把东西装进箱子（应用层）；快递员负责贴单、称重（传输层）；分拣中心只看城市和地址（网络层）；货车司机只管把车开到下一站（链路层）；修路的人只管路面能不能走（物理层）。每一层只解决自己的问题，<b>不关心上一层在寄什么</b>。</div>
+
+  <h3 class="sub">1.4.1 协议、服务、接口</h3>
+  <table class="tbl">
+    <tr><th>概念</th><th>含义</th><th>记忆</th></tr>
+    <tr><td>协议</td><td>同层对等实体之间通信的规则，三要素：<b>语法、语义、时序</b></td><td>“怎么说话”</td></tr>
+    <tr><td>服务</td><td>下层向上层提供的功能</td><td>“能帮我做什么”</td></tr>
+    <tr><td>接口</td><td>上下层交换信息的点，规定上层怎么调用下层</td><td>“在哪里交接”</td></tr>
+  </table>
+  <p>协议是<b>水平的</b>（同层之间），服务是<b>垂直的</b>（下层给上层）。这是选择题高频辨析。</p>
+
+  <h3 class="sub">1.4.2 OSI 七层模型</h3>
+  <table class="tbl">
+    <tr><th>层</th><th>核心功能</th><th>PDU</th><th>典型协议/设备</th></tr>
+    <tr><td>7 应用层</td><td>为用户应用提供网络服务</td><td>报文</td><td>HTTP、DNS、SMTP、FTP</td></tr>
+    <tr><td>6 表示层</td><td>数据格式转换、加密、压缩</td><td>报文</td><td>JPEG、ASCII、TLS（部分）</td></tr>
+    <tr><td>5 会话层</td><td>建立、管理、终止会话</td><td>报文</td><td>RPC、会话管理</td></tr>
+    <tr><td>4 传输层</td><td>端到端、进程到进程的通信；可靠/不可靠</td><td>报文段/用户数据报</td><td>TCP、UDP</td></tr>
+    <tr><td>3 网络层</td><td>分组转发、路由选择、异构网络互联</td><td>分组/数据报</td><td>IP、ICMP、ARP、路由器</td></tr>
+    <tr><td>2 数据链路层</td><td>成帧、差错检测、介质访问控制</td><td>帧</td><td>Ethernet、PPP、交换机</td></tr>
+    <tr><td>1 物理层</td><td>在介质上传输比特，规定机械/电气/功能/规程特性</td><td>比特</td><td>中继器、集线器、网线</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 记忆口诀</div>
+  从下往上：<b>物、链、网、传、会、表、应</b>。从下往上记“物联网传会表应”，比从上往下顺。</div>
+
+  <h3 class="sub">1.4.3 TCP/IP 四层与五层教学模型</h3>
+  <table class="tbl">
+    <tr><th>OSI 七层</th><th>TCP/IP 四层</th><th>五层教学模型</th></tr>
+    <tr><td>应用层、表示层、会话层</td><td>应用层</td><td>应用层</td></tr>
+    <tr><td>传输层</td><td>传输层</td><td>传输层</td></tr>
+    <tr><td>网络层</td><td>网际层</td><td>网络层</td></tr>
+    <tr><td>数据链路层、物理层</td><td>网络接口层</td><td>数据链路层 + 物理层</td></tr>
+  </table>
+  <p>408 常用<b>五层模型</b>讲原理：物理层、数据链路层、网络层、传输层、应用层。TCP/IP 四层是实际工程模型，网络接口层不规定具体协议。</p>
+
+  <h3 class="sub">1.4.4 端到端 vs 点到点</h3>
+  <table class="tbl">
+    <tr><th></th><th>点到点</th><th>端到端</th></tr>
+    <tr><td>含义</td><td>相邻结点之间的一段通信</td><td>源主机进程到目的主机进程</td></tr>
+    <tr><td>典型层</td><td>物理层、数据链路层</td><td>传输层、应用层</td></tr>
+    <tr><td>可靠性</td><td>只保证这一跳</td><td>由 TCP 等端到端协议保证</td></tr>
+  </table>
+  <div class="callout warn"><div class="co-title">⚠️ 别混淆</div>
+  数据链路层负责“这一跳别出错”，传输层负责“从源头到终点别出错”。链路层 CRC 校验通过，不代表数据没丢；中间路由器一拥塞就可能丢包。</div>
+
+  <h2 class="sec" id="s5">1.5 封装、解封装与设备层次</h2>
+  <p>发送数据时，从上往下<b>逐层加首部</b>；接收数据时，从下往上<b>逐层拆首部</b>。每一层只读自己能看懂的字段。</p>
+  <pre class="code">应用层：        [ 数据 ]
+传输层：        [TCP 首部][ 数据 ]                   → 报文段
+网络层：        [IP 首部][TCP 首部][ 数据 ]           → 分组
+数据链路层：    [帧头][IP 首部][TCP 首部][ 数据 ][FCS] → 帧
+物理层：        0101010101010101010101010101010101     → 比特流</pre>
+
+  <div class="demo" id="lab-encap">
+    <div class="demo-title">🔬 实验室：封装与解封装</div>
+    <div class="demo-desc">点“下一层”，看每一层给数据加上什么。注意：首部是“套”在外面的，不是把原数据改掉。</div>
+    <div class="demo-stage"><div class="encap-stage" id="encap-stage"></div></div>
+    <div class="demo-ctrl">
+      <button id="encap-next">下一层 ↓</button>
+      <button id="encap-reset" class="ghost">重置</button>
+    </div>
+    <div class="demo-note" id="encap-note"></div>
+  </div>
+
+  <h3 class="sub">1.5.1 设备工作在哪一层</h3>
+  <table class="tbl">
+    <tr><th>设备</th><th>工作层</th><th>核心行为</th><th>是否隔离冲突域/广播域</th></tr>
+    <tr><td>中继器、集线器</td><td>物理层</td><td>放大、整形、转发比特</td><td>都不隔离（集线器所有端口同一冲突域、同一广播域）</td></tr>
+    <tr><td>网桥、交换机</td><td>数据链路层</td><td>按 MAC 地址转发帧</td><td>隔离冲突域，不隔离广播域</td></tr>
+    <tr><td>路由器</td><td>网络层</td><td>按 IP 地址选路、转发分组</td><td>既隔离冲突域，也隔离广播域</td></tr>
+    <tr><td>网关</td><td>高层（4~7）</td><td>协议转换</td><td>看具体实现</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 408 高频</div>
+  “交换机隔离冲突域但不隔离广播域；路由器两者都隔离”几乎每年换着考。集线器是共享带宽，交换机的每个端口独享带宽。</div>
+
+  <h2 class="sec" id="deep">🚀 进阶深挖（教材级）</h2>
+  <p class="muted">以下内容对齐谢希仁《计算机网络》与王道《计算机网络考研复习指导》的处理深度，零基础第一遍可先跳过，二轮必看。</p>
+
+  <h3 class="sub">深挖 1 · 时延计算的三类套路</h3>
+  <p><b>套路 A：单链路。</b>总时延 = L/R + d/v。注意单位，B 先乘 8，Mbps 是 10⁶。</p>
+  <p><b>套路 B：多跳存储转发。</b>每个结点都要“收完再发”，若忽略处理/排队，总时延 = 每跳的发送时延 + 每段传播时延。分组交换的流水线优势在“多个分组”时才明显。</p>
+  <p><b>套路 C：端到端 + 确认。</b>停止等待协议的总时间 = 发送时延 + RTT + 确认帧发送时延。若题目说“忽略确认帧”，就只加 RTT。</p>
+
+  <h3 class="sub">深挖 2 · 为什么 Internet 用数据报而不是虚电路</h3>
+  <p>数据报方式每个分组独立选路，结点不保存连接状态，抗故障能力强、实现简单；代价是可能乱序、重复。虚电路方式先建立逻辑连接，所有分组沿同一路径按序到达，适合实时业务，但结点要维护状态，链路故障影响大。Internet 的设计哲学是“把复杂性放到端系统”，所以网络层只做尽最大努力交付。</p>
+
+  <h3 class="sub">深挖 3 · 分层模型的“坑”</h3>
+  <div class="callout warn"><div class="co-title">⚠️ 三个常见误区</div>
+  ① <b>“OSI 七层是实际使用的模型”</b>——错，OSI 是理论参考模型，实际广泛使用的是 TCP/IP。<br>
+  ② <b>“表示层和会话层在 TCP/IP 中消失了”</b>——不是消失，是功能被合并进应用层，由具体应用自己实现。<br>
+  ③ <b>“协议就是服务”</b>——错，协议是水平规则，服务是垂直能力；下层协议对上层透明。</div>
+
+  <h3 class="sub">深挖 4 · 本章在真题里怎么考</h3>
+  <div class="callout exam"><div class="co-title">📌 历年命题规律</div>
+  <b>① 时延计算：</b>给数据量、带宽、距离，求总时延或判断“增加带宽能否降低时延”。<br>
+  <b>② 交换方式对比：</b>给场景选电路/报文/分组，或问分组交换为什么适合突发数据。<br>
+  <b>③ 分层与设备：</b>问某设备/协议属于哪一层，或给功能选层。<br>
+  <b>④ 封装顺序：</b>给几个 PDU 名称排序，或问某层首部由谁添加。<br>
+  这四类题不需要死记硬背，关键是<b>把“数据从应用到网线”的路径走一遍</b>。</div>
+
+  <h2 class="sec" id="pit">⚠️ 本章避坑清单</h2>
+  <div class="steps">
+    <div class="step">单位换算：<b>1 B = 8 bit</b>；速率里的 k/M/G 是 10³/10⁶/10⁹，存储容量才常用 1024。</div>
+    <div class="step">发送时延看“数据量 ÷ 带宽”，传播时延看“距离 ÷ 光速”，两者<b>不能互相替代</b>。</div>
+    <div class="step">“带宽越大，时延越小”只在发送时延占主导时成立；传播时延由距离决定。</div>
+    <div class="step">分组交换不保证按序、不保证可靠，可靠性由 TCP 等上层协议负责。</div>
+    <div class="step">交换机隔离冲突域但不隔离广播域；路由器两者都隔离；集线器两者都不隔离。</div>
+    <div class="step">协议是水平的，服务是垂直的；OSI 是参考模型，TCP/IP 是实际模型。</div>
+  </div>
+
+  <h2 class="sec" id="quiz">📝 章内练习（8 题 · 基础 → 提高 → 真题）</h2>
+  <h3 class="sub" style="color:var(--green)">🟢 第一档 · 基础（3 题）</h3>
+
+  <div class="quiz" data-answer="D" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 1 · 考点：网络的组成要素</div>
+    下列哪一项<b>不属于</b>计算机网络的基本组成要素？</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 多台具有独立功能的计算机</div>
+      <div class="opt" data-opt="B">B. 通信介质与通信设备</div>
+      <div class="opt" data-opt="C">C. 网络协议</div>
+      <div class="opt" data-opt="D">D. 所有计算机必须安装统一的操作系统</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：D。</b>计算机网络只要求主机具有独立功能并能遵守共同协议，不要求操作系统相同。Windows、Linux、macOS 可以共存于同一网络，靠协议通信。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 2 · 考点：分组交换的特点</div>
+    与报文交换相比，分组交换的主要优点是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 完全不需要存储转发，因此没有时延</div>
+      <div class="opt" data-opt="B">B. 分组较小，可以采用流水线方式，降低总时延并提高链路利用率</div>
+      <div class="opt" data-opt="C">C. 保证所有分组按序到达</div>
+      <div class="opt" data-opt="D">D. 不需要任何首部开销</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>分组交换仍然采用存储转发，但分组小、可以并行推进，形成流水线；它不保证按序到达，而且每个分组都有首部开销。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">练习 3 · 考点：发送时延计算</div>
+    一个 1000 B 的数据块，以 100 Mbps 的速率发送，发送时延为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 8 μs</div>
+      <div class="opt" data-opt="B">B. 80 μs</div>
+      <div class="opt" data-opt="C">C. 800 μs</div>
+      <div class="opt" data-opt="D">D. 8 ms</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>1000 B = 8000 bit；8000 ÷ (100×10⁶) = 80×10⁻⁶ s = 80 μs。最容易错的是忘记乘 8，得到 10 μs。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--accent)">🟡 第二档 · 提高（3 题）</h3>
+
+  <div class="quiz" data-answer="A" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 4 · 考点：传播时延与带宽的关系</div>
+    北京到上海的光纤链路长度约 1000 km，信号传播速度约 2×10⁵ km/s。下列说法正确的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 传播时延约 5 ms，提高带宽不能降低它</div>
+      <div class="opt" data-opt="B">B. 传播时延约 5 ms，提高带宽可以降低它</div>
+      <div class="opt" data-opt="C">C. 传播时延约 50 ms，提高带宽可以降低它</div>
+      <div class="opt" data-opt="D">D. 传播时延约 0.5 ms，与带宽无关</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：A。</b>传播时延 = 1000 ÷ (2×10⁵) = 5×10⁻³ s = 5 ms。它只由距离和介质传播速度决定，带宽再大也改变不了光在光纤里跑的时间。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 5 · 考点：时延带宽积</div>
+    某链路带宽 100 Mbps，传播时延 5 ms，则时延带宽积为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 500 bit</div>
+      <div class="opt" data-opt="B">B. 5×10⁴ bit</div>
+      <div class="opt" data-opt="C">C. 5×10⁵ bit</div>
+      <div class="opt" data-opt="D">D. 5×10⁶ bit</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>100×10⁶ × 5×10⁻³ = 5×10⁵ bit，即 500 kbit（62.5 KB）。它表示链路“管道”中最多能容纳的比特数。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">练习 6 · 考点：分层与设备</div>
+    下列关于网络设备的说法，正确的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 集线器可以隔离冲突域</div>
+      <div class="opt" data-opt="B">B. 交换机可以隔离冲突域，但不能隔离广播域</div>
+      <div class="opt" data-opt="C">C. 路由器只能隔离冲突域，不能隔离广播域</div>
+      <div class="opt" data-opt="D">D. 网桥工作在网络层</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>集线器是物理层设备，所有端口同属一个冲突域；交换机是数据链路层设备，按端口隔离冲突域，但广播帧仍会扩散到整个广播域；路由器工作在网络层，两者都隔离。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--brand)">🔵 第三档 · 真题风格（2 题）</h3>
+
+  <div class="quiz" data-answer="D" data-diff="real">
+    <div class="q-head"><div class="q-tag">练习 7 · 考点：封装顺序</div>
+    数据从应用层向下传递到物理层，下列 PDU 名称出现的顺序正确的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 帧 → 分组 → 报文段 → 比特</div>
+      <div class="opt" data-opt="B">B. 报文 → 帧 → 分组 → 报文段</div>
+      <div class="opt" data-opt="C">C. 报文段 → 报文 → 分组 → 帧</div>
+      <div class="opt" data-opt="D">D. 报文 → 报文段 → 分组 → 帧 → 比特</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：D。</b>应用层是报文，传输层封装成报文段（TCP）或用户数据报（UDP），网络层封装成分组，链路层封装成帧，物理层变成比特流。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="real">
+    <div class="q-head"><div class="q-tag">练习 8 · 考点：分组交换的流水线</div>
+    报文长 8000 bit，分成 20 个 400 bit 的分组，经过两条带宽均为 100 Mbps 的链路（中间一个路由器，忽略传播、处理和排队时延）。从发送第一个比特到接收端收到最后一个比特，大约需要：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 80 μs</div>
+      <div class="opt" data-opt="B">B. 84 μs</div>
+      <div class="opt" data-opt="C">C. 88 μs</div>
+      <div class="opt" data-opt="D">D. 160 μs</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>每组在一跳上的发送时间 τ = 400 ÷ 10⁸ = 4 μs。首分组要经过两跳，2τ = 8 μs 到达；此时后面 19 个分组还在流水线上，每 4 μs 到达一个，所以总时间 = 8 + 19×4 = 84 μs。也可用公式 (分组数 + 链路数 − 1)×τ = (20+2−1)×4 = 84 μs。80 μs 是“忽略第二跳发送”的干扰项。</div>
+  </div>
+
+  <h2 class="sec" id="ck">✅ 本章打卡清单</h2>
+  <div data-ck-scope>
+    <p><span class="progress-pill">0 / 6 已打卡</span></p>
+    <div class="checklist">
+      <label class="check-item" data-ck="ch01-1"><input type="checkbox"><span>能用自己的话说出计算机网络的三要素，并区分网络边缘与核心。</span></label>
+      <label class="check-item" data-ck="ch01-2"><input type="checkbox"><span>能列出电路、报文、分组交换的优缺点，并解释分组交换为什么适合突发数据。</span></label>
+      <label class="check-item" data-ck="ch01-3"><input type="checkbox"><span>独立算对 1000 B / 100 Mbps / 1000 km 的发送时延、传播时延、总时延和时延带宽积。</span></label>
+      <label class="check-item" data-ck="ch01-4"><input type="checkbox"><span>能画出 OSI 七层、TCP/IP 四层、五层模型的对应表，并说出每层 PDU。</span></label>
+      <label class="check-item" data-ck="ch01-5"><input type="checkbox"><span>能按顺序说出封装过程，并判断交换机/路由器/集线器是否隔离冲突域和广播域。</span></label>
+      <label class="check-item" data-ck="ch01-6"><input type="checkbox"><span>章内 8 题做完，错题已写清错因。</span></label>
+    </div>
+  </div>
+</div>
+
+<footer>
+  408 计算机网络可视化课堂 · 第 1 章 体系结构<br>
+  <div class="pagers">
+    <a href="index.html">← 返回总览</a><a href="ch02.html">下一章 物理层 →</a><a href="practice.html">去练习场</a>
+  </div>
+</footer>
+<script src="assets/app.js?v=1"></script>
+<script src="assets/labs.js?v=1"></script>
+</body>
+</html>

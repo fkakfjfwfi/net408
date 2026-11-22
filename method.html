@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>备考方法论 · 408 计算机网络可视化课堂</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<nav class="topbar"><div class="topbar-inner">
+  <a class="logo" href="index.html"><span class="dot"></span>408 计算机网络可视化课堂</a>
+  <div class="nav-links">
+    <a href="index.html">总览</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
+  </div>
+  <button class="theme-btn" title="切换明暗主题">🌙</button>
+</div></nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>计算机网络 · 备考方法论</h1>
+    <p>网络只占 25 分，但它是 408 里<b>最容易在短时间内拿高分</b>的一科：题型固定、计算套路有限、不需要写大段代码。方法对了，投入产出比极高；方法错了，会把时间浪费在背不住的细节上。</p>
+    <p class="tagline">目标拆解 · 三轮规划 · 计算题清单 · 错题本 · 真题两遍法 · 考场策略</p>
+  </div>
+
+  <div class="toc"><span class="toc-label">本页导航</span><a href="#enemy">分值拆解</a><a href="#plan">三轮规划</a><a href="#daily">每日动作</a><a href="#wrong">错题本</a><a href="#calc">计算专项</a><a href="#real">真题两遍法</a><a href="#memory">记忆清单</a><a href="#giveup">弃疗点</a><a href="#exam">考场策略</a><a href="#ck">行动清单</a></div>
+
+  <h2 class="sec" id="enemy">1. 先看清敌人：25 分从哪里来</h2>
+  <table class="tbl">
+    <tr><th>题型</th><th>数量与分值</th><th>网络部分常见考点</th><th>你的目标</th></tr>
+    <tr><td>单项选择题</td><td>约 8 题 × 2 分 = 16 分</td><td>分层与设备、时延/奈氏/香农、CRC、滑动窗口、子网划分、TCP 握手与拥塞控制、DNS/HTTP</td><td>对 7 题，拿 14 分</td></tr>
+    <tr><td>综合应用题</td><td>约 1 题 × 9 分</td><td>子网划分 + 路由表、TCP 拥塞窗口、CSMA/CD 与帧、DNS/HTTP 时延综合</td><td>拿 7 分以上</td></tr>
+    <tr><td><b>合计</b></td><td><b>约 25 分</b></td><td>—</td><td><b>21 分以上</b></td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 关键判断</div>
+  网络部分的 25 分里，<b>至少 15 分是“套路题”</b>：时延、奈氏/香农、CRC、窗口、子网、拥塞窗口、RTT。只要把这些套路练到“看到题就知道列什么式子”，这科就不会拖后腿。真正难的是概念辨析，而概念辨析靠“分层地图 + 对比表”，不靠死背。</div>
+  <p><b>不要做的事：</b>不要从第一章第一页开始逐字抄书；不要先啃 TCP 状态机再学 IP；不要只听课不做题；不要用“看了很多遍”代替“能默写、能算对”。</p>
+
+  <h2 class="sec" id="plan">2. 三轮规划：每一轮只做一件事</h2>
+  <h3 class="sub">2.1 基础轮（约 6~8 周）——建立地图</h3>
+  <table class="tbl">
+    <tr><th>周次</th><th>内容</th><th>必须完成的动作</th><th>验收标准</th></tr>
+    <tr><td>第 1 周</td><td>第 1 章 体系结构</td><td>看 2 遍本站第 1 章 + 1 遍教材对应章；做 8 题；手算 3 道时延题</td><td>能画出五层模型，能算时延/时延带宽积</td></tr>
+    <tr><td>第 2 周</td><td>第 2 章 物理层</td><td>背奈氏/香农；做 8 题；手算 5 道信道容量题；玩 2 次实验室</td><td>给带宽/电平/信噪比能立刻选公式</td></tr>
+    <tr><td>第 3~4 周</td><td>第 3 章 数据链路层</td><td>CRC、透明传输、GBN/SR、CSMA/CD 各做 3 道；做 8 题</td><td>能默写 GBN/SR 窗口公式，能算最短帧长</td></tr>
+    <tr><td>第 5~6 周</td><td>第 4 章 网络层</td><td>子网划分每天 3 道；分片 3 道；路由协议对比表默写；做 8 题</td><td>任意 IP/前缀 30 秒内说出网络/广播地址</td></tr>
+    <tr><td>第 7 周</td><td>第 5 章 传输层</td><td>画 3 遍三次握手/四次挥手；cwnd 曲线 5 道；做 8 题</td><td>能默写握手序号，能画 cwnd 变化</td></tr>
+    <tr><td>第 8 周</td><td>第 6 章 应用层</td><td>端口表默写；DNS 过程复述；RTT 计算 5 道；做 8 题</td><td>能算非持久/持久/流水线的 RTT</td></tr>
+  </table>
+  <div class="callout warn"><div class="co-title">⚠️ 基础轮的误区</div>
+  不要追求“全部听懂”。第一轮的目标是<b>知道每一层解决什么问题、有哪些协议、公式长什么样</b>。听不懂的地方标记出来，第二轮再啃；千万不要在一个 TCP 状态图上卡三天。</div>
+
+  <h3 class="sub">2.2 强化轮（约 4~6 周）——专项突破</h3>
+  <div class="steps">
+    <div class="step"><b>按题型刷，不按章节刷。</b>把近 15 年真题里的网络题按“时延 / 奈氏香农 / CRC / 窗口 / 子网 / 分片 / 握手 / 拥塞 / DNS-HTTP”分类，每类集中做 5~10 道。</div>
+    <div class="step"><b>每类题总结“识别信号 + 固定步骤”。</b>例如看到“最长前缀匹配”就写“转二进制/比前缀/选最长”；看到“cwnd”就画轮次表。</div>
+    <div class="step"><b>综合题动手写完整过程。</b>不要只在脑子里想；子网划分要写出掩码、网络地址、广播地址、可用范围，路由表要写下一跳。</div>
+    <div class="step"><b>错题当天回看，三天后重做。</b>错题不是抄答案，而是写“我为什么会错”。</div>
+  </div>
+
+  <h3 class="sub">2.3 冲刺轮（约 3~4 周）——套卷与背诵</h3>
+  <div class="steps">
+    <div class="step"><b>每周 2 套完整 408 套卷</b>，严格计时 180 分钟；网络部分控制在 25~30 分钟。</div>
+    <div class="step"><b>真题第二遍只做错题和第二遍仍不确定的题。</b>如果一道题两次都错，说明不是粗心，是知识点没建立，回教材。</div>
+    <div class="step"><b>背“精确记忆清单”</b>：端口、协议号、窗口公式、设备层次、状态名。每天 10 分钟，滚动复习。</div>
+    <div class="step"><b>考前一周不再开新题</b>，只看错题本、公式表和自己的易错点。</div>
+  </div>
+
+  <h3 class="sub">2.4 如果只剩 4 周：极限版</h3>
+  <table class="tbl">
+    <tr><th>时间</th><th>做什么</th></tr>
+    <tr><td>第 1 周</td><td>第 1、2、3 章 + 对应计算题；只抓时延、奈氏/香农、CRC、CSMA/CD</td></tr>
+    <tr><td>第 2 周</td><td>第 4 章 + 子网划分/分片/路由协议；每天 5 道子网题</td></tr>
+    <tr><td>第 3 周</td><td>第 5、6 章 + 握手/挥手/拥塞窗口/RTT；做 3 套真题的网络部分</td></tr>
+    <tr><td>第 4 周</td><td>错题二刷 + 公式表 + 2 套完整套卷；不再学新内容</td></tr>
+  </table>
+
+  <h2 class="sec" id="daily">3. 每日动作：90 分钟怎么用</h2>
+  <table class="tbl">
+    <tr><th>阶段</th><th>时间</th><th>动作</th></tr>
+    <tr><td>预习</td><td>10 min</td><td>看本章标题和本节问题，先自己想“如果是我会怎么设计”</td></tr>
+    <tr><td>输入</td><td>30 min</td><td>看本站分节详解或网课，遇到公式立刻暂停手推一遍</td></tr>
+    <tr><td>复述</td><td>10 min</td><td>合上页面，用自己的话讲一遍“这一层解决什么问题、关键字段是什么”</td></tr>
+    <tr><td>做题</td><td>25 min</td><td>做 5~8 道对应题，限时，不翻书</td></tr>
+    <tr><td>复盘</td><td>15 min</td><td>对答案，错题写三栏；把错因归类为“概念/计算/粗心”</td></tr>
+  </table>
+  <div class="callout ok"><div class="co-title">✅ 每周固定动作</div>
+  ① 周一到周五按章节推进；② 周六做一套限时组卷；③ 周日只做错题 + 默写公式表；④ 每周日晚上用 10 分钟规划下周，写清“每天做哪几道题”。</div>
+
+  <h2 class="sec" id="wrong">4. 错题本三栏法：不写答案，写动作</h2>
+  <p>错题本不是抄题本。每道错题只写三栏，控制在 5 行以内：</p>
+  <table class="tbl">
+    <tr><th>栏目</th><th>写什么</th><th>示例</th></tr>
+    <tr><td>① 错因</td><td>概念不清 / 公式记错 / 单位换算 / 审题漏条件 / 计算粗心</td><td>“单位换算：把 1000 B 当成 1000 bit”</td></tr>
+    <tr><td>② 知识点</td><td>对应章节 + 一句话核心</td><td>“第 1 章时延：发送时延=L/R，B 要×8”</td></tr>
+    <tr><td>③ 下次动作</td><td>可执行的动作，不是“下次注意”</td><td>“以后每题先在草稿纸写 L=…bit，再代入”</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 错题复盘的三问</div>
+  ① 这道题考的是哪个知识点？② 我卡在哪一步（识别/列式/计算/选项）？③ 下次遇到同类题，我的第一个动作是什么？<br>
+  三问答不出来，说明这道题还没真正消化，不要急着做下一道。</div>
+
+  <h2 class="sec" id="calc">5. 计算题专项清单（必须全会）</h2>
+  <table class="tbl">
+    <tr><th>#</th><th>题型</th><th>核心公式 / 方法</th><th>最容易错的点</th></tr>
+    <tr><td>1</td><td>发送/传播/总时延</td><td>L/R + d/v；B 先×8；Mbps=10⁶</td><td>把发送时延和传播时延混为一谈</td></tr>
+    <tr><td>2</td><td>时延带宽积 / RTT</td><td>R×传播时延；RTT=2×传播时延</td><td>单位写成 bit/s 或漏乘 2</td></tr>
+    <tr><td>3</td><td>码元/比特率</td><td>R=B·log₂M</td><td>把 Baud 当 b/s</td></tr>
+    <tr><td>4</td><td>奈氏准则</td><td>2W·log₂M</td><td>漏掉 2，或与香农混用</td></tr>
+    <tr><td>5</td><td>香农定理</td><td>W·log₂(1+S/N)；dB→倍数</td><td>30 dB 当成 S/N=30</td></tr>
+    <tr><td>6</td><td>CRC</td><td>补 r 个 0，模 2 除，余数 r 位</td><td>余数位数写成 G 的位数</td></tr>
+    <tr><td>7</td><td>停止等待利用率</td><td>T<sub>d</sub>/(T<sub>d</sub>+RTT+T<sub>a</sub>)</td><td>分母漏 RTT 或漏 T<sub>d</sub></td></tr>
+    <tr><td>8</td><td>GBN / SR 窗口</td><td>GBN≤2ⁿ−1；SR≤2ⁿ⁻¹</td><td>两个公式记反</td></tr>
+    <tr><td>9</td><td>CSMA/CD 最短帧</td><td>2τ×R；10 Mbps→64 B</td><td>用 τ 而不是 2τ</td></tr>
+    <tr><td>10</td><td>子网划分</td><td>网络地址=IP AND 掩码；广播=网络 OR 反掩码</td><td>广播地址算成“下一个子网−2”</td></tr>
+    <tr><td>11</td><td>CIDR 聚合</td><td>连续块数→2 的幂→缩短前缀</td><td>前缀缩短位数算错</td></tr>
+    <tr><td>12</td><td>IP 分片</td><td>每片数据 1480 B（MTU 1500）；偏移单位 8 B</td><td>把首部也算进每片数据</td></tr>
+    <tr><td>13</td><td>TCP 握手/挥手序号</td><td>SYN/FIN 各占 1 个序号</td><td>第三次握手 ack 写成 y 而不是 y+1</td></tr>
+    <tr><td>14</td><td>拥塞窗口</td><td>慢开始×2；拥塞避免+1；超时 cwnd=1</td><td>快恢复时把 cwnd 也置 1</td></tr>
+    <tr><td>15</td><td>DNS/HTTP RTT</td><td>非持久每对象 2 RTT；持久流水线约 2 RTT</td><td>漏 DNS 或漏 TCP 握手</td></tr>
+    <tr><td>16</td><td>CDMA</td><td>内积÷码片长度：+1/−1/0</td><td>把 0 当成“发了 0”</td></tr>
+  </table>
+  <div class="callout ok"><div class="co-title">✅ 训练方法</div>
+  每类题先做 3 道“慢速精做”（写完整步骤），再做 5 道“限时快做”（3 分钟内）。连续两次全对，才把这类题标记为“过关”。不要一遍又一遍看例题，要<b>遮住答案自己写</b>。</div>
+
+  <h2 class="sec" id="real">6. 真题两遍法：第一遍学，第二遍考</h2>
+  <h3 class="sub">第一遍：按章节拆开做（基础轮后期 ~ 强化轮）</h3>
+  <p>把近 15 年真题里的网络题按章节归类，学完一章就做对应题。目的是<b>知道这一章怎么考</b>，不追求速度。做错的题标上“知识点 + 年份”。</p>
+  <h3 class="sub">第二遍：按套卷限时做（冲刺轮）</h3>
+  <p>整套 408 限时 180 分钟，网络部分控制在 25~30 分钟。做完不只对答案，还要统计：</p>
+  <table class="tbl">
+    <tr><th>统计项</th><th>怎么用</th></tr>
+    <tr><td>单选错题数</td><td>超过 2 题，说明概念或计算有硬伤，回章节</td></tr>
+    <tr><td>综合题得分</td><td>低于 6 分，重写一遍完整过程，对照采分点</td></tr>
+    <tr><td>错因分类</td><td>概念/计算/粗心各几道；粗心超过 2 道，说明草稿习惯有问题</td></tr>
+    <tr><td>时间分配</td><td>网络超过 35 分钟，说明某类题不熟，需要专项提速</td></tr>
+  </table>
+  <div class="callout warn"><div class="co-title">⚠️ 真题不要“刷完就扔”</div>
+  真题的价值不在“做过”，而在“反复暴露同一个问题”。如果二刷还错同一道题，把这道题抄进错题本，考前只看它。</div>
+
+  <h2 class="sec" id="memory">7. 精确记忆清单（每天 10 分钟滚动）</h2>
+  <h3 class="sub">7.1 端口与协议</h3>
+  <table class="tbl">
+    <tr><th>端口</th><th>协议</th><th>传输层</th><th>用途</th></tr>
+    <tr><td>20 / 21</td><td>FTP</td><td>TCP</td><td>数据（主动）/ 控制</td></tr>
+    <tr><td>22 / 23</td><td>SSH / Telnet</td><td>TCP</td><td>远程登录</td></tr>
+    <tr><td>25</td><td>SMTP</td><td>TCP</td><td>发送邮件</td></tr>
+    <tr><td>53</td><td>DNS</td><td>UDP / TCP</td><td>域名解析 / 区域传送</td></tr>
+    <tr><td>67 / 68</td><td>DHCP</td><td>UDP</td><td>服务器 / 客户端</td></tr>
+    <tr><td>80 / 443</td><td>HTTP / HTTPS</td><td>TCP</td><td>Web</td></tr>
+    <tr><td>110 / 143</td><td>POP3 / IMAP</td><td>TCP</td><td>收邮件</td></tr>
+    <tr><td>179 / 520</td><td>BGP / RIP</td><td>TCP / UDP</td><td>路由协议</td></tr>
+  </table>
+  <h3 class="sub">7.2 协议号与设备层次</h3>
+  <table class="tbl">
+    <tr><th>记忆项</th><th>内容</th></tr>
+    <tr><td>IP 协议号</td><td>ICMP=1，TCP=6，UDP=17，OSPF=89</td></tr>
+    <tr><td>设备层次</td><td>中继器/集线器=物理层；网桥/交换机=数据链路层；路由器=网络层；网关=高层</td></tr>
+    <tr><td>冲突域/广播域</td><td>集线器都不隔离；交换机隔离冲突域；路由器都隔离；VLAN 隔离广播域</td></tr>
+    <tr><td>PDU</td><td>报文 → 报文段/用户数据报 → 分组 → 帧 → 比特</td></tr>
+    <tr><td>TCP 状态</td><td>LISTEN、SYN_SENT、SYN_RCVD、ESTABLISHED、FIN_WAIT_1/2、CLOSE_WAIT、LAST_ACK、TIME_WAIT</td></tr>
+  </table>
+  <h3 class="sub">7.3 公式一页纸</h3>
+  <pre class="code">发送时延 = L / R
+传播时延 = d / v
+时延带宽积 = R × 传播时延
+RTT = 2 × 传播时延（单向传播）
+比特率 = 码元速率 × log₂M
+奈氏：Rmax = 2W·log₂M
+香农：C = W·log₂(1 + S/N)
+SNR(dB) = 10·log₁₀(S/N)
+CRC 余数位数 = G 的位数 − 1
+停止等待 U = Td / (Td + RTT + Ta)
+GBN 窗口 ≤ 2ⁿ − 1
+SR 窗口 ≤ 2ⁿ⁻¹
+CSMA/CD 最短帧长 = 2τ × R
+子网可用主机数 = 2^(32−前缀) − 2
+TCP 发送窗口 = min(rwnd, cwnd)
+慢开始：每 RTT 翻倍；拥塞避免：每 RTT +1
+超时：ssthresh=cwnd/2，cwnd=1
+快恢复：ssthresh=cwnd/2，cwnd=ssthresh
+HTTP 非持久：每对象 2 RTT；持久非流水线：2+(N−1)；流水线：约 2 RTT</pre>
+
+  <h2 class="sec" id="giveup">8. 六个常见“弃疗点”与对策</h2>
+  <div class="steps">
+    <div class="step"><b>“分层记不住。”</b>不要背七层名字，先记“物链网传会表应”，再给每层配一个动作：传比特、传帧、找路、进程通信、会话、格式、应用。每天默画一次，三天就稳。</div>
+    <div class="step"><b>“子网划分一看就晕。”</b>只练三步：写掩码→IP 与掩码按位与得网络地址→反掩码得广播地址。先用 /24、/26、/27 练熟，再碰 /22、/13。每天 3 道，一周就够。</div>
+    <div class="step"><b>“TCP 状态图太复杂。”</b>408 不要求默画完整 11 状态图，重点是三次握手、四次挥手、TIME_WAIT。把这两张时序图默写 3 遍，比背状态图有用。</div>
+    <div class="step"><b>“公式一用就错。”</b>不是公式没背会，是单位没统一。强制自己在草稿纸第一行写“L=…bit，R=…b/s”，再代入。所有时延/带宽题都这样做。</div>
+    <div class="step"><b>“协议太多，张冠李戴。”</b>做一张“层—协议—端口—传输层”的四列表，每天遮住一列自测。RIP/OSPF/BGP 单独一张对比表。</div>
+    <div class="step"><b>“视频看完了，题还是不会。”</b>看视频是输入，做题是输出，两者之间隔着“复述”和“手算”。每看完一节，合上视频用自己的话讲一遍，再做 3 道题；讲不出来就是没学会。</div>
+  </div>
+
+  <h2 class="sec" id="exam">9. 考场策略：25 分怎么在 30 分钟内拿稳</h2>
+  <table class="tbl">
+    <tr><th>阶段</th><th>时间</th><th>动作</th></tr>
+    <tr><td>第一遍（单选）</td><td>12~15 min</td><td>按顺序做，遇到卡住的先标记跳过；计算题在草稿纸写清单位</td></tr>
+    <tr><td>第二遍（综合）</td><td>12~15 min</td><td>先读问题再读题干；子网题写出掩码和地址，按步骤拿分</td></tr>
+    <tr><td>检查</td><td>3~5 min</td><td>检查单位、广播地址、ack 是否 +1、cwnd 是否回到 1</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 综合题采分点思维</div>
+  综合题按步骤给分：写出掩码、网络地址、广播地址、可用范围、下一跳，每一步都可能得分。<b>不要只写最终答案</b>；即使算错，过程分也能拿。子网题先画地址块，TCP 题先画时序/轮次表，路由题先写目的网络+掩码+下一跳。</div>
+  <div class="callout warn"><div class="co-title">⚠️ 单选遇到“绝对化”选项</div>
+  出现“一定”“必须”“完全避免”“保证按序”等绝对化表述，先怀疑。网络里大量协议是“尽最大努力”，可靠传输靠上层；分组交换不保证按序，CSMA/CD 不能完全避免冲突，CSMA/CA 也不能。</div>
+
+  <h2 class="sec" id="ck">✅ 本周行动清单</h2>
+  <div data-ck-scope>
+    <p><span class="progress-pill">0 / 6 已打卡</span></p>
+    <div class="checklist">
+      <label class="check-item" data-ck="method-1"><input type="checkbox"><span>把 25 分拆成“单选 14 + 综合 7”，写在本周计划第一行。</span></label>
+      <label class="check-item" data-ck="method-2"><input type="checkbox"><span>按当前进度选一套三轮计划（8 周 / 4 周），写到日历上。</span></label>
+      <label class="check-item" data-ck="method-3"><input type="checkbox"><span>建立错题本三栏，并把最近 3 道错题按“错因/知识点/下次动作”重写。</span></label>
+      <label class="check-item" data-ck="method-4"><input type="checkbox"><span>把 16 类计算题清单过一遍，标出自己最怕的 3 类。</span></label>
+      <label class="check-item" data-ck="method-5"><input type="checkbox"><span>默写端口表 + 公式一页纸，错一个补一个。</span></label>
+      <label class="check-item" data-ck="method-6"><input type="checkbox"><span>完成一套限时组卷（练习场任选一卷），并统计错因。</span></label>
+    </div>
+  </div>
+</div>
+
+<footer>
+  408 计算机网络可视化课堂 · 备考方法论<br>
+  <div class="pagers">
+    <a href="index.html">← 返回总览</a><a href="practice.html">去练习场</a><a href="resources.html">资源导航 →</a>
+  </div>
+</footer>
+<script src="assets/app.js?v=1"></script>
+</body>
+</html>
