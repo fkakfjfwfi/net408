@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>零基础保底包 · 408 计算机网络可视化课堂</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<nav class="topbar"><div class="topbar-inner">
+  <a class="logo" href="index.html"><span class="dot"></span>408 计算机网络可视化课堂</a>
+  <div class="nav-links">
+    <a href="index.html">总览</a><a href="zero.html" class="active">零基础</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
+  </div>
+  <button class="theme-btn" title="切换明暗主题">🌙</button>
+</div></nav>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>零基础保底包：先建立地图，再进章节</h1>
+    <p>如果你打开第 1 章觉得“每个字都认识，但连不起来”，先停在这里。这一页只做四件事：把 <b>5 个核心概念</b>讲成人话，把 <b>4 个地址</b>分清楚，把 <b>一次网页访问的完整旅程</b>走一遍，再用 <b>14 类计算模板 + 20 题自测</b>确认你是否达到 60 分。</p>
+    <p class="tagline">约 90 分钟 · 5 个概念 · 4 个地址 · 14 类计算 · 20 题自测 · 60 分达标线</p>
+  </div>
+
+  <div class="toc"><span class="toc-label">本页导航</span><a href="#check">先做判断</a><a href="#concepts">5 个概念</a><a href="#addresses">4 个地址</a><a href="#units">单位与二进制</a><a href="#journey">一次访问</a><a href="#map">五层地图</a><a href="#glossary">术语表</a><a href="#calc">计算模板</a><a href="#test">20 题自测</a><a href="#plan">7 天计划</a><a href="#pass">60 分标准</a></div>
+
+  <div class="callout exam" id="check"><div class="co-title">🎯 先做 3 分钟判断</div>
+  下面 5 句话，如果你能<b>不看资料</b>说清 3 句以上，可以直接去第 1 章；否则按本页顺序学：<br>
+  ① IP 地址和 MAC 地址分别做什么？<br>
+  ② 为什么数据要“一层一层加首部”？<br>
+  ③ 2000 B 的数据在 10 Mbps 链路上发送，发送时延是多少？<br>
+  ④ TCP 为什么握手三次、挥手四次？<br>
+  ⑤ 输入一个网址到看到网页，中间经过了哪些协议？</div>
+
+  <h2 class="sec" id="concepts">1. 五个核心概念：先能用自己的话讲</h2>
+  <table class="tbl">
+    <tr><th>概念</th><th>一句话定义</th><th>生活类比</th><th>本站哪里讲</th></tr>
+    <tr><td><b>主机 / 端系统</b></td><td>能独立运行程序、产生或接收数据的设备</td><td>公司里的每个人</td><td>第 1 章 1.1</td></tr>
+    <tr><td><b>链路</b></td><td>把相邻结点连起来的物理通道</td><td>两个工位之间的走廊</td><td>第 2、3 章</td></tr>
+    <tr><td><b>协议</b></td><td>通信双方共同遵守的规则</td><td>打电话先说“喂”，结束说“再见”</td><td>第 1 章 1.4</td></tr>
+    <tr><td><b>分层</b></td><td>把复杂通信拆成若干层，每层只解决一类问题</td><td>寄快递：你装箱、快递员贴单、分拣中心看城市</td><td>第 1 章 1.4</td></tr>
+    <tr><td><b>封装</b></td><td>数据向下传递时，每层给它加一个首部</td><td>套娃：每层外面再套一层箱子</td><td>第 1 章 1.5</td></tr>
+  </table>
+  <div class="callout life"><div class="co-title">💬 协议的三要素</div>
+  <b>语法：</b>数据长什么样（字段顺序、格式）。<br>
+  <b>语义：</b>每个字段是什么意思、要做什么动作。<br>
+  <b>时序：</b>谁先发、谁后发、什么时候发。<br>
+  例：HTTP 请求行 <code class="inline">GET /index.html HTTP/1.1</code> 是语法；“GET 表示要取资源”是语义；“先建 TCP 连接再发请求”是时序。</div>
+
+  <h2 class="sec" id="addresses">2. 四个地址：别再混成一团</h2>
+  <p>零基础最容易卡住的地方，是把 MAC、IP、端口、域名当成同一个东西。它们分别解决“哪块网卡、哪台主机、哪个进程、人怎么记”。</p>
+  <table class="tbl">
+    <tr><th>地址</th><th>作用</th><th>作用范围</th><th>长度 / 形式</th><th>类比</th><th>例子</th></tr>
+    <tr><td><b>MAC 地址</b></td><td>标识一块网卡，负责<b>本跳</b>交付</td><td>同一个局域网/链路</td><td>48 bit，如 00-1A-2B-3C-4D-5E</td><td>身份证号</td><td>交换机按 MAC 转发帧</td></tr>
+    <tr><td><b>IP 地址</b></td><td>标识主机/接口，负责<b>跨网络</b>寻址</td><td>整个互联网</td><td>32 bit（IPv4），点分十进制</td><td>门牌号</td><td>192.168.1.10</td></tr>
+    <tr><td><b>端口号</b></td><td>标识主机里的一个<b>进程</b></td><td>一台主机内部</td><td>16 bit，0~65535</td><td>房间/部门号</td><td>HTTP 80，DNS 53</td></tr>
+    <tr><td><b>域名</b></td><td>方便人记忆，最终要解析成 IP</td><td>全球 DNS 体系</td><td>分层字符串</td><td>人的姓名</td><td>www.example.com</td></tr>
+  </table>
+  <div class="callout exam"><div class="co-title">📌 一句话记住</div>
+  <b>域名给人看，IP 找主机，端口找进程，MAC 找网卡。</b>一次跨网段通信里，IP 地址端到端基本不变，MAC 地址每经过一跳都会换。</div>
+  <pre class="code">你在浏览器输入：https://www.example.com/index.html
+
+域名：www.example.com        → DNS 解析成 IP
+IP：93.184.216.34            → 路由器按它选路
+端口：443                    → 交给服务器上的 HTTPS 进程
+MAC：本网段网关的 MAC        → 交换机/网卡按它交付这一跳
+下一跳路由器的 MAC：又换一个 → 所以 MAC 只在本跳有效</pre>
+
+  <h2 class="sec" id="units">3. 单位与二进制：计算题的第一道门槛</h2>
+  <div class="grid cols-2">
+    <div class="card">
+      <h3>比特与字节</h3>
+      <p><b>1 B = 8 bit</b>。题目给“1000 B”，先换成 8000 bit 再去除速率；忘记乘 8 是最高频的失分点。</p>
+      <p>速率单位：1 kbps = 10³ b/s，1 Mbps = 10⁶ b/s，1 Gbps = 10⁹ b/s。这里的 k/M/G 是<b>十进制</b>。</p>
+    </div>
+    <div class="card">
+      <h3>前缀与地址块</h3>
+      <p>/n 表示前 n 位是网络位。主机位有 32−n 位，地址总数 = 2^(32−n)，可用主机数再减 2（网络地址、广播地址）。</p>
+      <p>/24→256 个，/25→128，/26→64，/27→32，/28→16，/30→4。先背这 6 个，子网题就快一半。</p>
+    </div>
+  </div>
+  <table class="tbl">
+    <tr><th>2 的幂</th><th>值</th><th>用途</th></tr>
+    <tr><td>2⁸</td><td>256</td><td>一个 /24 的地址总数</td></tr>
+    <tr><td>2¹⁰</td><td>1024</td><td>4 个连续 /24 聚合成 /22</td></tr>
+    <tr><td>2¹⁶</td><td>65536</td><td>一个 /16 的地址总数</td></tr>
+    <tr><td>2³²</td><td>约 43 亿</td><td>IPv4 地址空间总量</td></tr>
+  </table>
+  <div class="callout warn"><div class="co-title">⚠️ 两种“K”不要混</div>
+  网络速率里的 k=1000；存储容量里的 K 常按 1024。408 题目若写“KB”通常指 1024 B，但计算数据率时更安全的做法是<b>先把所有量换成 bit 和秒</b>，再代入公式。</div>
+
+  <h2 class="sec" id="journey">4. 一次网页访问的完整旅程（全站主线）</h2>
+  <p>把下面 10 步讲顺，你就有了计网的“主干”。每一章只是把其中某几步拆细。</p>
+  <div class="steps">
+    <div class="step"><b>① 解析 URL（应用层）：</b>浏览器拆出协议 https、域名 www.example.com、路径 /index.html、端口 443。</div>
+    <div class="step"><b>② DNS 查询（应用层，UDP 53）：</b>域名→IP。先查浏览器/系统缓存，再问本地 DNS；本地 DNS 迭代问根、顶级、权威服务器。</div>
+    <div class="step"><b>③ 路由判断（网络层）：</b>目的 IP 不在本网段，查路由表，决定发给默认网关。</div>
+    <div class="step"><b>④ ARP（网络层/链路层之间）：</b>已知网关 IP，广播询问它的 MAC；拿到后写入 ARP 缓存。</div>
+    <div class="step"><b>⑤ TCP 三次握手（传输层）：</b>SYN → SYN+ACK → ACK，双方确认收发能力，进入 ESTABLISHED。</div>
+    <div class="step"><b>⑥ 发送 HTTP 请求（应用层）：</b>GET /index.html HTTP/1.1，带 Host、Cookie、User-Agent 等首部。</div>
+    <div class="step"><b>⑦ 逐层封装：</b>HTTP 报文→TCP 段→IP 分组→以太网帧→比特。每层加自己的首部，接收端逐层拆。</div>
+    <div class="step"><b>⑧ 转发：</b>交换机按 MAC 在局域网内转发；路由器按 IP 选路，TTL 减 1，MAC 每跳重写。</div>
+    <div class="step"><b>⑨ 服务器处理：</b>服务器逐层解封装，HTTP 进程读到请求，生成响应，再逐层封装发回。</div>
+    <div class="step"><b>⑩ 浏览器渲染：</b>收到响应，解析 HTML/CSS/JS；连接保持或按四次挥手关闭。</div>
+  </div>
+  <div class="callout ok"><div class="co-title">✅ 自检动作</div>
+  合上页面，用 3 分钟把 10 步讲一遍。讲不下去的地方，就是你要回去补的章节：②⑥→第 6 章，③④→第 4 章，⑤→第 5 章，⑦⑧→第 1、3 章。</div>
+
+  <h2 class="sec" id="map">5. 五层地图：每层只记四件事</h2>
+  <table class="tbl">
+    <tr><th>层</th><th>解决什么问题</th><th>PDU</th><th>地址</th><th>典型设备</th><th>典型协议</th></tr>
+    <tr><td>应用层</td><td>为用户应用提供网络服务</td><td>报文</td><td>域名/URL</td><td>—</td><td>HTTP、DNS、SMTP、FTP</td></tr>
+    <tr><td>传输层</td><td>进程到进程通信、可靠/流量/拥塞</td><td>报文段/用户数据报</td><td>端口</td><td>—</td><td>TCP、UDP</td></tr>
+    <tr><td>网络层</td><td>分组转发、路由选择、异构互联</td><td>分组</td><td>IP</td><td>路由器</td><td>IP、ICMP、ARP、RIP、OSPF、BGP</td></tr>
+    <tr><td>数据链路层</td><td>成帧、检错、介质访问</td><td>帧</td><td>MAC</td><td>交换机、网桥</td><td>Ethernet、PPP</td></tr>
+    <tr><td>物理层</td><td>在介质上传输比特</td><td>比特</td><td>—</td><td>中继器、集线器</td><td>—</td></tr>
+  </table>
+  <table class="tbl">
+    <tr><th>设备</th><th>冲突域</th><th>广播域</th><th>转发依据</th></tr>
+    <tr><td>集线器</td><td>所有端口同一个</td><td>所有端口同一个</td><td>广播比特</td></tr>
+    <tr><td>交换机</td><td>每个端口一个</td><td>默认一个（VLAN 可隔离）</td><td>MAC</td></tr>
+    <tr><td>路由器</td><td>每个接口一个</td><td>每个接口一个</td><td>IP</td></tr>
+  </table>
+
+  <h2 class="sec" id="glossary">6. 术语表：看不懂时回来查</h2>
+  <table class="tbl">
+    <tr><th>术语</th><th>一句话解释</th><th>章节</th></tr>
+    <tr><td>协议</td><td>同层通信双方遵守的规则，含语法、语义、时序</td><td>1</td></tr>
+    <tr><td>封装</td><td>数据向下传递时逐层加首部</td><td>1</td></tr>
+    <tr><td>PDU</td><td>每层的数据单位：报文/段/分组/帧/比特</td><td>1</td></tr>
+    <tr><td>带宽</td><td>链路能传输的最高数据率</td><td>1、2</td></tr>
+    <tr><td>时延</td><td>发送+传播+处理+排队</td><td>1</td></tr>
+    <tr><td>RTT</td><td>往返时延，约等于 2×传播时延</td><td>1、5、6</td></tr>
+    <tr><td>码元</td><td>一个固定时长的信号波形，可携带多个比特</td><td>2</td></tr>
+    <tr><td>波特率</td><td>每秒传输的码元数，单位 Baud</td><td>2</td></tr>
+    <tr><td>奈氏准则</td><td>理想无噪声信道最高数据率 2W·log₂M</td><td>2</td></tr>
+    <tr><td>香农定理</td><td>有噪声信道极限 C=W·log₂(1+S/N)</td><td>2</td></tr>
+    <tr><td>CDMA</td><td>用正交码片区分用户，同一时间同一频率</td><td>2</td></tr>
+    <tr><td>帧</td><td>数据链路层的数据单位，含帧头、数据、FCS</td><td>3</td></tr>
+    <tr><td>透明传输</td><td>数据里出现帧界符也能原样传输</td><td>3</td></tr>
+    <tr><td>CRC</td><td>用生成多项式做模 2 除法检错</td><td>3</td></tr>
+    <tr><td>GBN</td><td>后退 N 帧，累积确认，出错后从错帧起全重传</td><td>3</td></tr>
+    <tr><td>SR</td><td>选择重传，只重传出错帧，缓存乱序帧</td><td>3</td></tr>
+    <tr><td>CSMA/CD</td><td>先听后发、边听边发、冲突停发、随机重发</td><td>3</td></tr>
+    <tr><td>冲突域</td><td>同一时刻只能有一台主机发送的范围</td><td>3</td></tr>
+    <tr><td>广播域</td><td>一个广播帧能到达的范围</td><td>3</td></tr>
+    <tr><td>VLAN</td><td>在交换机上划分逻辑局域网，隔离广播域</td><td>3</td></tr>
+    <tr><td>子网掩码</td><td>区分网络位和主机位的 32 位掩码</td><td>4</td></tr>
+    <tr><td>CIDR</td><td>用 /n 表示任意长度前缀的地址块</td><td>4</td></tr>
+    <tr><td>NAT</td><td>私有地址与公网地址/端口转换</td><td>4</td></tr>
+    <tr><td>ARP</td><td>已知 IP 求 MAC，广播请求、单播响应</td><td>4</td></tr>
+    <tr><td>DHCP</td><td>自动分配 IP、网关、DNS，四步 Discover/Offer/Request/ACK</td><td>4</td></tr>
+    <tr><td>ICMP</td><td>差错报告与询问，ping/traceroute 使用</td><td>4</td></tr>
+    <tr><td>RIP / OSPF / BGP</td><td>距离向量 / 链路状态 / 路径向量路由协议</td><td>4</td></tr>
+    <tr><td>端口</td><td>标识主机内的进程，16 bit</td><td>5</td></tr>
+    <tr><td>TCP</td><td>面向连接、可靠、字节流、全双工</td><td>5</td></tr>
+    <tr><td>UDP</td><td>无连接、不可靠、开销小、支持广播/组播</td><td>5</td></tr>
+    <tr><td>三次握手</td><td>SYN → SYN+ACK → ACK，确认双方收发能力</td><td>5</td></tr>
+    <tr><td>TIME_WAIT</td><td>主动关闭方等待 2MSL，保证最后 ACK 到达</td><td>5</td></tr>
+    <tr><td>流量控制</td><td>用 rwnd 防止接收方缓存溢出</td><td>5</td></tr>
+    <tr><td>拥塞控制</td><td>用 cwnd 防止网络过载</td><td>5</td></tr>
+    <tr><td>DNS</td><td>域名→IP，默认 UDP 53</td><td>6</td></tr>
+    <tr><td>HTTP</td><td>Web 请求/响应协议，默认 80/443</td><td>6</td></tr>
+    <tr><td>Cookie</td><td>服务器存在浏览器端的小段状态数据</td><td>6</td></tr>
+  </table>
+
+  <h2 class="sec" id="calc">7. 14 类计算模板：看到题就知道列什么</h2>
+  <p>计算题不要“凭感觉”。固定四步：<b>① 识别题型 → ② 写公式 → ③ 统一单位代入 → ④ 检查数量级</b>。</p>
+  <table class="tbl">
+    <tr><th>#</th><th>题型</th><th>识别信号</th><th>公式 / 步骤</th><th>易错点</th></tr>
+    <tr><td>1</td><td>发送/传播/总时延</td><td>数据量、带宽、距离、传播速度</td><td>L/R + d/v</td><td>B 先×8；Mbps=10⁶</td></tr>
+    <tr><td>2</td><td>时延带宽积 / RTT</td><td>带宽 + 传播时延</td><td>R×tp；RTT=2tp</td><td>单位是 bit，不是 bit/s</td></tr>
+    <tr><td>3</td><td>码元 / 比特率</td><td>码元速率、电平数 M</td><td>R=B·log₂M</td><td>Baud 不是 b/s</td></tr>
+    <tr><td>4</td><td>奈氏准则</td><td>理想无噪声、带宽、M</td><td>2W·log₂M</td><td>漏掉 2</td></tr>
+    <tr><td>5</td><td>香农定理</td><td>带宽、信噪比 dB</td><td>W·log₂(1+S/N)，S/N=10^(dB/10)</td><td>30 dB 不是 S/N=30</td></tr>
+    <tr><td>6</td><td>CRC</td><td>数据比特、生成多项式 G</td><td>补(G位数−1)个 0，模 2 除，取余数</td><td>余数位数写成 G 的位数</td></tr>
+    <tr><td>7</td><td>停止等待利用率</td><td>帧长、速率、RTT</td><td>Td/(Td+RTT+Ta)</td><td>分母漏 RTT</td></tr>
+    <tr><td>8</td><td>GBN / SR 窗口</td><td>序号位数 n</td><td>GBN≤2ⁿ−1；SR≤2ⁿ⁻¹</td><td>两个公式记反</td></tr>
+    <tr><td>9</td><td>CSMA/CD 最短帧</td><td>速率、单程传播时延 τ</td><td>2τ×R</td><td>用 τ 而不是 2τ</td></tr>
+    <tr><td>10</td><td>子网 / CIDR</td><td>IP + 前缀</td><td>网络=IP AND 掩码；广播=网络 OR 反掩码</td><td>把广播地址算成“下一个网络−2”</td></tr>
+    <tr><td>11</td><td>IP 分片</td><td>总长、MTU</td><td>每片数据 1480（MTU1500）；偏移÷8</td><td>把 20 B 首部算进数据</td></tr>
+    <tr><td>12</td><td>TCP 握手/挥手序号</td><td>初始序号 x、y</td><td>SYN/FIN 各占 1 个序号；ack=对方 seq+1</td><td>第三次 ack 写成 y</td></tr>
+    <tr><td>13</td><td>拥塞窗口</td><td>cwnd、ssthresh、丢包轮次</td><td>慢开始×2；拥塞避免+1；超时 cwnd=1；快恢复 cwnd=ssthresh</td><td>快恢复也置 1</td></tr>
+    <tr><td>14</td><td>DNS / HTTP RTT</td><td>对象数、连接方式</td><td>非持久每对象 2 RTT；持久非流水线 2+(N−1)；流水线约 2 RTT</td><td>漏 DNS 或 TCP 握手</td></tr>
+  </table>
+
+  <h3 class="sub">手把手例题 A · 时延 + 时延带宽积</h3>
+  <p>1500 B 的数据，以 100 Mbps 发送，链路长 2000 km，传播速度 2×10⁵ km/s。求发送时延、传播时延、总时延、时延带宽积、RTT。</p>
+  <pre class="code">① 识别：给数据量、速率、距离、速度 → 时延题。
+② 统一单位：L=1500×8=12000 bit；R=100×10⁶ b/s；d=2000 km；v=2×10⁵ km/s。
+③ 代入：
+   发送时延 = 12000 / 10⁸ = 120×10⁻⁶ s = 120 μs
+   传播时延 = 2000 / (2×10⁵) = 0.01 s = 10 ms
+   总时延 = 0.12 ms + 10 ms = 10.12 ms
+   时延带宽积 = 10⁸ × 0.01 = 10⁶ bit = 125 KB
+   RTT = 2×10 ms = 20 ms
+④ 检查：传播时延远大于发送时延，说明这段链路由距离主导；提高带宽几乎不降总时延。</pre>
+
+  <h3 class="sub">手把手例题 B · CRC</h3>
+  <p>数据 1101，生成多项式 G=101，求 CRC 余数和发送帧。</p>
+  <pre class="code">① G 是 3 位 → 余数取 2 位 → 数据后补 2 个 0，得 110100。
+② 模 2 除法（异或不借位）：
+   110100 ÷ 101，逐位异或，最后余数为 10。
+③ 发送帧 = 数据 + 余数 = 1101 10 = 110110。
+④ 接收端用 101 去除 110110，余数为 0 则未检出错误。</pre>
+
+  <h3 class="sub">手把手例题 C · 子网划分</h3>
+  <p>192.168.10.200/27 所在子网的网络地址、广播地址、可用主机范围是什么？</p>
+  <pre class="code">① /27 → 主机位 5 位 → 块大小 2⁵=32。
+② 子网边界：.0、.32、.64、.96、.128、.160、.192、.224。
+   200 落在 .192 ~ .223 这一块。
+③ 网络地址 = 192.168.10.192
+   广播地址 = 192.168.10.223
+   可用范围 = 192.168.10.193 ~ 192.168.10.222（30 个）
+④ 检查：网络地址主机位全 0，广播地址主机位全 1。</pre>
+
+  <h3 class="sub">手把手例题 D · 拥塞窗口</h3>
+  <p>初始 cwnd=1，ssthresh=8，第 6 轮发生超时。写出 cwnd 变化。</p>
+  <pre class="code">① 慢开始（cwnd<ssthresh）：每 RTT 翻倍
+   轮次 1：1 → 2
+   轮次 2：2 → 4
+   轮次 3：4 → 8（到达 ssthresh）
+② 拥塞避免（cwnd≥ssthresh）：每 RTT +1
+   轮次 4：8 → 9
+   轮次 5：9 → 10
+   轮次 6：10（超时）
+③ 超时处理：ssthresh = 10/2 = 5；cwnd = 1
+④ 重新慢开始：轮次 7：1→2；8：2→4；9：4→5；之后 +1
+   即：1,2,4,5,6,7,...</pre>
+
+  <h3 class="sub">手把手例题 E · TCP 三次握手序号</h3>
+  <p>客户端初始序号 x=1000，服务器初始序号 y=2000，写出三次握手的 seq/ack。</p>
+  <pre class="code">第一次（客户端→服务器）：SYN=1，seq=1000
+第二次（服务器→客户端）：SYN=1，ACK=1，seq=2000，ack=1001
+第三次（客户端→服务器）：ACK=1，seq=1001，ack=2001
+注意：SYN 占 1 个序号，所以确认号要 +1。</pre>
+
+  <h2 class="sec" id="test">8. 20 题自测：到 60 分再进章节</h2>
+  <p class="muted">10 道概念 + 10 道计算，建议 25 分钟闭卷完成。答对 <b>14 题（70%）</b> 说明你已具备进入六章学习的底子；低于 14 题，按下面的“错题回流表”补。</p>
+
+  <h3 class="sub" style="color:var(--green)">🟢 概念题（10 题）</h3>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 1 · 传输层</div>
+    传输层的主要作用是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 主机到主机的通信</div>
+      <div class="opt" data-opt="B">B. 进程到进程的通信</div>
+      <div class="opt" data-opt="C">C. 在物理介质上传输比特</div>
+      <div class="opt" data-opt="D">D. 把域名解析成 IP</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>网络层把数据送到主机，传输层用端口把数据交给正确的进程；A 是网络层，C 是物理层，D 是 DNS（应用层）。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 2 · PDU 顺序</div>
+    数据从应用层向下到物理层，PDU 的正确顺序是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 帧 → 分组 → 报文段 → 比特</div>
+      <div class="opt" data-opt="B">B. 报文 → 报文段 → 分组 → 帧 → 比特</div>
+      <div class="opt" data-opt="C">C. 分组 → 帧 → 报文段 → 报文</div>
+      <div class="opt" data-opt="D">D. 报文段 → 报文 → 帧 → 分组</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>应用层报文→传输层报文段→网络层分组→链路层帧→物理层比特。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 3 · 交换机</div>
+    交换机对冲突域和广播域的影响是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 两者都隔离</div>
+      <div class="opt" data-opt="B">B. 隔离冲突域，不隔离广播域</div>
+      <div class="opt" data-opt="C">C. 两者都不隔离</div>
+      <div class="opt" data-opt="D">D. 隔离广播域，不隔离冲突域</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>交换机每个端口是一个冲突域；广播帧仍会泛洪到所有端口，默认一个广播域。VLAN 才能隔离广播域。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 4 · 跨网段 MAC</div>
+    主机访问另一个网段的主机，发出的帧的目的 MAC 是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 最终目的主机的 MAC</div>
+      <div class="opt" data-opt="B">B. 默认网关的 MAC</div>
+      <div class="opt" data-opt="C">C. 广播 MAC</div>
+      <div class="opt" data-opt="D">D. 自己的 MAC</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>目的 IP 不在本网段，主机把帧发给网关；帧的目的 MAC 是网关 MAC，IP 目的地址仍是最终主机。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 5 · 端口</div>
+    端口号的作用是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 标识一台主机</div>
+      <div class="opt" data-opt="B">B. 标识主机中的一个进程</div>
+      <div class="opt" data-opt="C">C. 标识一个局域网</div>
+      <div class="opt" data-opt="D">D. 标识一块网卡</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>IP 标识主机/接口，MAC 标识网卡，端口标识进程。IP+端口= socket。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 6 · DNS</div>
+    DNS 查询默认使用的传输层协议是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. TCP</div>
+      <div class="opt" data-opt="B">B. UDP</div>
+      <div class="opt" data-opt="C">C. ICMP</div>
+      <div class="opt" data-opt="D">D. IP</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>DNS 默认用 UDP 53；区域传送等需要可靠传输的场景才用 TCP 53。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 7 · TCP 特点</div>
+    下列属于 TCP 特点的是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 无连接、不可靠</div>
+      <div class="opt" data-opt="B">B. 支持广播和组播</div>
+      <div class="opt" data-opt="C">C. 面向连接、可靠、字节流</div>
+      <div class="opt" data-opt="D">D. 首部只有 8 B</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>TCP 面向连接、可靠、全双工字节流，一对一；UDP 才是无连接、支持广播/组播，首部 8 B。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 8 · 第三次握手</div>
+    TCP 三次握手中，第三次 ACK 的主要作用是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 让客户端确认自己的发送能力</div>
+      <div class="opt" data-opt="B">B. 让服务器确认自己的 SYN 已被收到，并防止旧连接请求</div>
+      <div class="opt" data-opt="C">C. 关闭连接</div>
+      <div class="opt" data-opt="D">D. 分配 IP 地址</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>第三次 ACK 让服务器确认“客户端能收、服务器能发”，同时避免网络中滞留的旧 SYN 建立无效连接。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 9 · 流量控制</div>
+    TCP 流量控制主要依据哪个窗口？</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. cwnd</div>
+      <div class="opt" data-opt="B">B. rwnd</div>
+      <div class="opt" data-opt="C">C. TTL</div>
+      <div class="opt" data-opt="D">D. MTU</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>rwnd 是接收方通告的接收窗口，防止接收缓存溢出；cwnd 是发送方估计的拥塞窗口，防止网络过载。发送窗口取两者较小值。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="basic">
+    <div class="q-head"><div class="q-tag">自测 10 · 路由器</div>
+    路由器主要工作在哪一层？</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 物理层</div>
+      <div class="opt" data-opt="B">B. 数据链路层</div>
+      <div class="opt" data-opt="C">C. 网络层</div>
+      <div class="opt" data-opt="D">D. 传输层</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>路由器按 IP 地址选路、转发分组，工作在网络层；交换机按 MAC 工作在链路层。</div>
+  </div>
+
+  <h3 class="sub" style="color:var(--accent)">🟡 计算题（10 题）</h3>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 11 · 发送时延</div>
+    1500 B 的数据，以 100 Mbps 发送，发送时延为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 12 μs</div>
+      <div class="opt" data-opt="B">B. 120 μs</div>
+      <div class="opt" data-opt="C">C. 1.2 ms</div>
+      <div class="opt" data-opt="D">D. 12 ms</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>1500×8=12000 bit；12000÷10⁸=1.2×10⁻⁴ s=120 μs。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 12 · 时延带宽积</div>
+    10 Mbps 链路，传播时延 20 ms，时延带宽积为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 2×10⁴ bit</div>
+      <div class="opt" data-opt="B">B. 2×10⁵ bit</div>
+      <div class="opt" data-opt="C">C. 2×10⁶ bit</div>
+      <div class="opt" data-opt="D">D. 200 bit</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>10×10⁶×20×10⁻³=2×10⁵ bit，即 200 kbit。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 13 · 奈氏准则</div>
+    带宽 6 kHz，采用 4 种码元，理想无噪声信道的最高数据率为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 6 kbps</div>
+      <div class="opt" data-opt="B">B. 12 kbps</div>
+      <div class="opt" data-opt="C">C. 24 kbps</div>
+      <div class="opt" data-opt="D">D. 48 kbps</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>2W·log₂M=2×6000×log₂4=2×6000×2=24000 b/s=24 kbps。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 14 · 香农定理</div>
+    带宽 4 kHz，信噪比 20 dB，极限数据率约为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 8 kbps</div>
+      <div class="opt" data-opt="B">B. 16 kbps</div>
+      <div class="opt" data-opt="C">C. 26.6 kbps</div>
+      <div class="opt" data-opt="D">D. 40 kbps</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>20 dB→S/N=100；C=4000×log₂(101)≈4000×6.66≈26.6 kbps。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 15 · CRC 位数</div>
+    生成多项式 G=1101，CRC 余数应取几位？</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 2 位</div>
+      <div class="opt" data-opt="B">B. 3 位</div>
+      <div class="opt" data-opt="C">C. 4 位</div>
+      <div class="opt" data-opt="D">D. 5 位</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>G 是 4 位，最高次为 x³，余数取 3 位（位数−1）。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 16 · GBN 窗口</div>
+    GBN 使用 4 位序号，发送窗口最大为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 8</div>
+      <div class="opt" data-opt="B">B. 15</div>
+      <div class="opt" data-opt="C">C. 16</div>
+      <div class="opt" data-opt="D">D. 7</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>GBN 窗口≤2ⁿ−1=16−1=15；SR 才是 2ⁿ⁻¹=8。</div>
+  </div>
+
+  <div class="quiz" data-answer="C" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 17 · CSMA/CD 最短帧</div>
+    100 Mbps 网络，单程传播时延 2.56 μs，最短帧长为：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 32 B</div>
+      <div class="opt" data-opt="B">B. 128 B</div>
+      <div class="opt" data-opt="C">C. 64 B</div>
+      <div class="opt" data-opt="D">D. 256 B</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：C。</b>2τ=5.12 μs；5.12×10⁻⁶×10⁸=512 bit=64 B。</div>
+  </div>
+
+  <div class="quiz" data-answer="D" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 18 · 子网广播地址</div>
+    172.16.5.130/25 所在子网的广播地址是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 172.16.5.127</div>
+      <div class="opt" data-opt="B">B. 172.16.5.128</div>
+      <div class="opt" data-opt="C">C. 172.16.5.191</div>
+      <div class="opt" data-opt="D">D. 172.16.5.255</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：D。</b>/25 块大小 128，.130 属于 .128/25，广播地址 .255，可用 .129~.254。</div>
+  </div>
+
+  <div class="quiz" data-answer="B" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 19 · IP 分片</div>
+    4000 B 的 IP 数据报（首部 20 B）经过 MTU=1500 B 的链路，分成几片？</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. 2 片</div>
+      <div class="opt" data-opt="B">B. 3 片</div>
+      <div class="opt" data-opt="C">C. 4 片</div>
+      <div class="opt" data-opt="D">D. 5 片</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：B。</b>数据 3980 B，每片最多 1480 B；3980=1480+1480+1020，共 3 片。</div>
+  </div>
+
+  <div class="quiz" data-answer="A" data-diff="mid">
+    <div class="q-head"><div class="q-tag">自测 20 · 拥塞窗口</div>
+    TCP 连接 cwnd=24 时发生超时，超时后的 ssthresh 和 cwnd 是：</div>
+    <div class="opts">
+      <div class="opt" data-opt="A">A. ssthresh=12，cwnd=1</div>
+      <div class="opt" data-opt="B">B. ssthresh=12，cwnd=12</div>
+      <div class="opt" data-opt="C">C. ssthresh=24，cwnd=1</div>
+      <div class="opt" data-opt="D">D. ssthresh=6，cwnd=1</div>
+    </div>
+    <div class="q-foot"><button class="btn-ans">提交答案</button><span class="q-res"></span></div>
+    <div class="q-exp"><b>答案：A。</b>超时：ssthresh=cwnd/2=12，cwnd=1，重新慢开始；快恢复才是 cwnd=12。</div>
+  </div>
+
+  <h2 class="sec" id="plan">9. 7 天启动计划（每天约 2 小时）</h2>
+  <table class="tbl">
+    <tr><th>天</th><th>先看</th><th>再做</th><th>当天验收</th></tr>
+    <tr><td>第 1 天</td><td>本页 1~5 节</td><td>把“一次网页访问”10 步讲 2 遍</td><td>能不看资料讲出 8 步以上</td></tr>
+    <tr><td>第 2 天</td><td>本页 6~7 节 + 第 1 章</td><td>时延/CRC/子网例题各手算 1 遍；第 1 章 8 题</td><td>时延题全对</td></tr>
+    <tr><td>第 3 天</td><td>第 2 章</td><td>奈氏/香农实验室各玩 2 次；第 2 章 8 题</td><td>给带宽/电平/信噪比会选公式</td></tr>
+    <tr><td>第 4 天</td><td>第 3 章</td><td>CRC 实验室；GBN/SR 窗口默写；第 3 章 8 题</td><td>窗口公式不混</td></tr>
+    <tr><td>第 5 天</td><td>第 4 章</td><td>子网实验室 5 次；分片 3 题；第 4 章 8 题</td><td>任意 /24~/27 能口算子网</td></tr>
+    <tr><td>第 6 天</td><td>第 5 章</td><td>握手/cwnd 实验室；第 5 章 8 题</td><td>能画三次握手 + cwnd 曲线</td></tr>
+    <tr><td>第 7 天</td><td>第 6 章</td><td>DNS 实验室；RTT 计算；本页 20 题自测</td><td>自测 ≥14 题</td></tr>
+  </table>
+  <p class="muted">这只是“启动周”，目的是建立全局地图。之后按 <a href="method.html">备考方法论</a> 的三轮规划继续推进。</p>
+
+  <h2 class="sec" id="pass">10. 60 分达标标准：逐条打勾</h2>
+  <div class="callout exam"><div class="co-title">📌 什么叫“达到 60 分”</div>
+  不是“看完六章”，而是能<b>不看资料</b>完成下面 8 件事。做到 6 件以上，再进章节系统学；做到 8 件，基础理解已经稳过 60。</div>
+  <div data-ck-scope>
+    <p><span class="progress-pill">0 / 8 已打卡</span></p>
+    <div class="checklist">
+      <label class="check-item" data-ck="zero-1"><input type="checkbox"><span>能用 3 分钟讲清“输入网址到看到网页”的 10 步旅程。</span></label>
+      <label class="check-item" data-ck="zero-2"><input type="checkbox"><span>能画出五层模型，并说出每层 PDU、地址、典型设备。</span></label>
+      <label class="check-item" data-ck="zero-3"><input type="checkbox"><span>能区分域名、IP、端口、MAC 各自的作用范围。</span></label>
+      <label class="check-item" data-ck="zero-4"><input type="checkbox"><span>能独立算对时延、时延带宽积、奈氏、香农 4 类题。</span></label>
+      <label class="check-item" data-ck="zero-5"><input type="checkbox"><span>能独立算对 CRC、GBN/SR 窗口、CSMA/CD 最短帧 3 类题。</span></label>
+      <label class="check-item" data-ck="zero-6"><input type="checkbox"><span>能独立算对子网划分、IP 分片、CIDR 聚合 3 类题。</span></label>
+      <label class="check-item" data-ck="zero-7"><input type="checkbox"><span>能画出三次握手/四次挥手，解释 TIME_WAIT 和 cwnd 变化。</span></label>
+      <label class="check-item" data-ck="zero-8"><input type="checkbox"><span>本页 20 题自测答对 ≥14 题。</span></label>
+    </div>
+  </div>
+
+  <h3 class="sub">自测低于 14 题：按错题回流</h3>
+  <table class="tbl">
+    <tr><th>错题类型</th><th>回到哪里</th><th>补什么</th></tr>
+    <tr><td>概念题 1~5</td><td>本页 1~5 节 + 第 1 章</td><td>分层、封装、四个地址、设备层次</td></tr>
+    <tr><td>概念题 6~10</td><td>第 4、5 章</td><td>DNS、TCP/UDP、握手、流量控制</td></tr>
+    <tr><td>计算题 11~14</td><td>第 1、2 章 + 本页例题 A</td><td>单位换算、时延、奈氏/香农</td></tr>
+    <tr><td>计算题 15~17</td><td>第 3 章 + 本页例题 B</td><td>CRC、窗口、最短帧</td></tr>
+    <tr><td>计算题 18~19</td><td>第 4 章 + 本页例题 C</td><td>子网、分片、CIDR</td></tr>
+    <tr><td>计算题 20</td><td>第 5 章 + 本页例题 D</td><td>慢开始、拥塞避免、超时/快恢复</td></tr>
+  </table>
+</div>
+
+<footer>
+  408 计算机网络可视化课堂 · 零基础保底包<br>
+  <div class="pagers">
+    <a href="index.html">← 返回总览</a><a href="ch01.html">进入第 1 章 →</a><a href="method.html">备考方法论</a>
+  </div>
+</footer>
+<script src="assets/app.js?v=2"></script>
+</body>
+</html>

@@ -10,7 +10,7 @@
 <nav class="topbar"><div class="topbar-inner">
   <a class="logo" href="index.html"><span class="dot"></span>408 计算机网络可视化课堂</a>
   <div class="nav-links">
-    <a href="index.html">总览</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
+    <a href="index.html">总览</a><a href="zero.html">零基础</a><a href="ch01.html">体系结构</a><a href="ch02.html">物理层</a><a href="ch03.html">数据链路层</a><a href="ch04.html">网络层</a><a href="ch05.html">传输层</a><a href="ch06.html">应用层</a><a href="practice.html">练习场</a><a href="method.html">备考方法论</a><a href="resources.html">资源导航</a>
   </div>
   <button class="theme-btn" title="切换明暗主题">🌙</button>
 </div></nav>
@@ -20,6 +20,29 @@
     <h1>把计算机网络「跑」给你看 🌐</h1>
     <p>这是为 <b>408 考研零基础</b>同学准备的计算机网络学习站：每个协议先从一个生活场景讲起，再用<b>可以动手点的实验室</b>把封装、时延、CRC、子网划分、TCP 握手与拥塞窗口一步步演出来，最后落到 408 高频考点、计算例题、避坑清单和分级练习。</p>
     <p class="tagline"><span data-ck-total>0 / 0 项已打卡</span> · 6 章 · 8 个交互实验室 · 72 道分级练习 · 打卡进度自动保存在本机浏览器</p>
+  </div>
+
+  <h2 class="sec">🚩 零基础先看：90 分钟保底包</h2>
+  <p>如果打开第 1 章觉得“每个字都认识，但连不起来”，先做这三件事。它们不替代六章，但能让你在进入章节前具备 60 分的基础理解：知道谁在干什么、地址怎么分工、计算题怎么列式。</p>
+  <div class="grid cols-3" style="margin-top:14px">
+    <a class="card clickable" href="zero.html#concepts">
+      <span class="ch-num">第 1 步 · 建立地图</span>
+      <h3>5 个概念 + 4 个地址</h3>
+      <p>主机、链路、协议、分层、封装；域名、IP、端口、MAC 一次分清。再用“一次网页访问”的 10 步把六章串起来。</p>
+      <div class="chips"><span class="chip hot">零基础必看</span><span class="chip">90 分钟</span></div>
+    </a>
+    <a class="card clickable" href="zero.html#calc">
+      <span class="ch-num">第 2 步 · 会列式</span>
+      <h3>14 类计算模板</h3>
+      <p>时延、奈氏/香农、CRC、窗口、最短帧、子网、分片、握手、拥塞窗口、HTTP RTT——每类都有识别信号、公式和手把手例题。</p>
+      <div class="chips"><span class="chip hot">计算题救急</span><span class="chip">5 道完整例题</span></div>
+    </a>
+    <a class="card clickable" href="zero.html#test">
+      <span class="ch-num">第 3 步 · 验收入口</span>
+      <h3>20 题自测</h3>
+      <p>10 道概念 + 10 道计算，闭卷 25 分钟。答对 14 题再进章节；低于 14 题按错题回流表补，不盲目往下学。</p>
+      <div class="chips"><span class="chip hot">60 分达标线</span><span class="chip">错题回流</span></div>
+    </a>
   </div>
 
   <h2 class="sec">为什么这么学</h2>
@@ -97,7 +120,7 @@
 
   <h2 class="sec">学习路径（零基础）</h2>
   <div class="steps">
-    <div class="step"><b>第 0 步 · 先建地图：</b>先读第 1 章，把“分层、封装、PDU、设备”四件事弄明白。后面五章都是在这张地图上填细节。</div>
+    <div class="step"><b>第 0 步 · 先建地图：</b>先做一遍 <a href="zero.html">零基础保底包</a>：5 个概念、4 个地址、一次网页访问的 10 步、20 题自测。自测不到 14 题，先补保底包，不要直接啃第 1 章。</div>
     <div class="step"><b>第 1 步 · 按 01 → 06 顺序过章：</b>每章先读生活类比 → 分节详解 → 跟着例题手算一遍 → 点实验室验证 → 做 8 题 → 勾打卡。</div>
     <div class="step"><b>第 2 步 · 计算题专项：</b>把时延、奈氏/香农、CRC、滑动窗口、子网划分、拥塞窗口六类题各集中练 5 道，直到不看公式也能列式。</div>
     <div class="step"><b>第 3 步 · 去练习场：</b>按基础卷 → 提高卷 → 真题卷 → 全真模拟卷推进；错题自动进错题本，用“只看错题”二刷。</div>
