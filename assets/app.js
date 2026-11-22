@@ -46,12 +46,12 @@
       });
       var counter = scope.querySelector(".progress-pill");
       if (counter) counter.textContent = done + " / " + items.length + " 已打卡";
-      // 同步首页总计数
-      document.querySelectorAll("[data-ck-total]").forEach(function (el) {
-        var all = loadCK(); var total = 0, dn = 0;
-        Object.keys(all).forEach(function (k) { total++; if (all[k]) dn++; });
-        el.textContent = dn + " / " + total + " 项已打卡";
-      });
+    });
+    // 同步首页总计数（无论当前页有没有打卡区都要更新）
+    var all = loadCK(); var total = 0, dn = 0;
+    Object.keys(all).forEach(function (k) { total++; if (all[k]) dn++; });
+    document.querySelectorAll("[data-ck-total]").forEach(function (el) {
+      el.textContent = dn + " / " + total + " 项已打卡";
     });
   }
   document.addEventListener("change", function (ev) {
